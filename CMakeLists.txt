@@ -8,7 +8,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(cmake/llvm.cmake)
 include(cmake/googletest.cmake)
 
-add_executable(PolyLang src/main.cpp)
+file(GLOB PolyLang_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
-target_link_libraries(PolyLang ${llvm_libs})
-target_include_directories(PolyLang PUBLIC "${CMAKE_SOURCE_DIR}/include")
+# PolyLang
+add_executable(PolyLang src/main.cpp ${PolyLang_SOURCES})
+add_library(PolyLangLib STATIC ${PolyLang_SOURCES})
+
+target_include_directories(PolyLangLib PUBLIC ${PROJECT_SOURCE_DIR}/include) # Link to polylang
+target_link_libraries(PolyLang ${llvm_libs} PolyLangLib)
+
+# Tests files
+file(GLOB TEST_FILES "${PROJECT_SOURCE_DIR}/tests/*.cpp")
+add_executable(PolyLangTester ${PROJECT_SOURCE_DIR}/tests/tester.cpp ${TEST_FILES})
+
+target_include_directories(PolyLangTester PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(PolyLangTester ${llvm_libs} PolyLangLib gtest_main gmock_main)
+
+

@@ -1,4 +1,5 @@
 
+.PHONY: src build examples include test
 
 all: run
 
@@ -11,6 +12,8 @@ compile: setup
 run: compile setup
 	"./build/PolyLang"
 	
+test: compile
+	"./build/PolyLangTester"
 
 
 
