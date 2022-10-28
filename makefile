@@ -15,6 +15,8 @@ run: compile setup
 test: compile
 	"./build/PolyLangTester"
 
+count:
+	cloc src/ include/
 
 
 
