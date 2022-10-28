@@ -134,11 +134,12 @@ Token Lexer::scanIdentifier() {
   TokenType type;
   try {
     type = KEYWORDS.at(keyword);
+    return Token(type, std::nullopt, LineLoc(m_start, m_current, m_line));
   } catch (std::out_of_range e) {
     type = TokenType::Identifier;
+    // pass lexeme to the keyword which will be used to reference a variable
+    return Token(type, keyword, LineLoc(m_start, m_current, m_line));
   }
-
-  return Token(type, std::nullopt, LineLoc(m_start, m_current, m_line));
 
 }
 Token Lexer::scanNumber() {

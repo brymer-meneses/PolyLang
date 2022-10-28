@@ -98,13 +98,16 @@ TEST(Lexer, Keywords) {
 }
 
 TEST(Lexer, Identifiers) {
-  Lexer lexer = Lexer("_test varName var123 _var_123");
+  Lexer lexer = Lexer("_test varName var123 var_123");
   auto tokens = lexer.scanTokens();
+
+  std::array<std::string, 4> correctNames = {"_test", "varName", "var123", "var_123"};
 
   ASSERT_EQ(tokens.size(), 5);
 
   for (unsigned int i=0; i < tokens.size() - 1; i++) {
-    EXPECT_EQ(tokens[i].m_type, TokenType::Identifier) << i;
+    EXPECT_EQ(tokens[i].m_type, TokenType::Identifier);
+    EXPECT_EQ(tokens[i].m_value.value(), Object(correctNames[i]));
   }
 
   ASSERT_EQ(tokens[-1].m_type, TokenType::Eof);
