@@ -9,16 +9,17 @@
 
 #include <map>
 
-std::map<std::string, TokenType> KEYWORDS = {
-  { "and" ,  TokenType::And    },
-  { "or"  ,  TokenType::Or     },
-  { "def" ,  TokenType::Def    },
-  { "if"  ,  TokenType::If     },
-  { "elif",  TokenType::ElseIf },
-  { "else",  TokenType::Else   },
-  { "then",  TokenType::Then   },
-  { "let" ,  TokenType::Let   },
-  { "end" ,  TokenType::End    },
+const static std::map<std::string, TokenType> KEYWORDS = {
+  { "and"    ,  TokenType::And    },
+  { "or"     ,  TokenType::Or     },
+  { "def"    ,  TokenType::Def    },
+  { "if"     ,  TokenType::If     },
+  { "elif"   ,  TokenType::ElseIf },
+  { "else"   ,  TokenType::Else   },
+  { "then"   ,  TokenType::Then   },
+  { "let"    ,  TokenType::Let    },
+  { "end"    ,  TokenType::End    },
+  { "extern" ,  TokenType::Extern },
 };
 
 std::vector<Token> Lexer::scanTokens() {

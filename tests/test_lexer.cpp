@@ -5,12 +5,12 @@
 #include <Lexer.hpp>
 
 TEST(Lexer, SingleCharTokens) {
-  Lexer lexer = Lexer("+ = / * > < !");
+  Lexer lexer = Lexer("+ = / * > < ! ()");
   auto tokens = lexer.scanTokens();
 
-  ASSERT_EQ(tokens.size(), 8);
+  ASSERT_EQ(tokens.size(), 10);
 
-  std::array<TokenType, 8> correctTokenTypes = {
+  std::array<TokenType, 10> correctTokenTypes = {
     TokenType::Plus,
     TokenType::Equal,
     TokenType::Slash,
@@ -18,6 +18,8 @@ TEST(Lexer, SingleCharTokens) {
     TokenType::Greater,
     TokenType::Lesser,
     TokenType::Bang,
+    TokenType::LeftParen,
+    TokenType::RightParen,
     TokenType::Eof,
   };
 
