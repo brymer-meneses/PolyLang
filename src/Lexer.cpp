@@ -55,17 +55,22 @@ std::optional<Token> Lexer::scanSingleToken() {
     case '\r':
     case '\t':
       return std::nullopt;
+    case '(':
+      return Token(TokenType::LeftParen, std::nullopt, computeLineLocation());
+    case ')':
+      return Token(TokenType::RightParen, std::nullopt, computeLineLocation());
     case '+':
       return Token(TokenType::Plus, std::nullopt, computeLineLocation());
     case '-':
       return Token(TokenType::Minus, std::nullopt, computeLineLocation());
+    case ',':
+      return Token(TokenType::Comma, std::nullopt, computeLineLocation());
     case '/':
       if (match('/')) {
         while (peek() != '\n' && peek() != '\0')
           advance();
         return std::nullopt;
       }
-
       return Token(TokenType::Slash, std::nullopt, computeLineLocation());
     case '*':
       return Token(TokenType::Star, std::nullopt, computeLineLocation());

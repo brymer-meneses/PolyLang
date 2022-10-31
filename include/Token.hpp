@@ -18,6 +18,9 @@ enum class TokenType {
   Greater,
   Lesser,
   Bang,
+  LeftParen,
+  RightParen,
+  Comma,
 
   // two character tokens
   BangEqual,
@@ -36,6 +39,7 @@ enum class TokenType {
   Let,
   Def,
   Identifier,
+  Extern,
 
   // type tokens
   Number,
