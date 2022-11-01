@@ -102,7 +102,7 @@ TEST(Parser, Variable) {
   EXPECT_EQ(expr->name(), "_variableName123");
 }
 
-TEST(Parser, Prototype) {
+TEST(Parser, FunctionCall) {
   Parser parser = Parser("dist(x,y)");
   auto statements = parser.parse();
 
@@ -118,7 +118,23 @@ TEST(Parser, Prototype) {
   auto _x = args[0]->as<VariableExprAST*>();
   auto _y = args[1]->as<VariableExprAST*>();
 
+  EXPECT_EQ(args.size(), 2);
   EXPECT_EQ(_x->name(), "x");
   EXPECT_EQ(_y->name(), "y");
 
+}
+
+TEST(Parser, FunctionDefinition) {
+  Parser parser = Parser("def add(x,y) x + y");
+  auto statements = parser.parse();
+
+  ASSERT_EQ(statements.size(), 1);
+  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
+  //
+  auto stmt = statements[0].get()->as<FunctionAST*>();
+  auto expr = stmt->body<BinaryExprAST*>();
+
+  EXPECT_EQ(expr->left<VariableExprAST*>()->name(), "x");
+  EXPECT_EQ(expr->binOp(), TokenType::Plus);
+  EXPECT_EQ(expr->right<VariableExprAST*>()->name(), "y");
 }

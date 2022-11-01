@@ -98,32 +98,34 @@ std::unique_ptr<PrototypeAST> Parser::parsePrototype() {
     return nullptr;
   }
 
-  std::string fnName = std::get<1>(peek().m_value.value());
+  assert(previous().m_value.has_value());
+  std::string fnName = std::get<1>(previous().m_value.value());
 
   if (!match({TokenType::LeftParen})) {
     LogError("Expected '(' in prototype");
     return nullptr;
   }
 
-  std::vector<std::string> argNames;
-  while (match({TokenType::Identifier})) {
-
-    std::string arg = std::get<1>(previous().m_value.value());
-
-    if (!match({TokenType::Comma})) {
-      LogError("Expected ')' in prototype");
-      return nullptr;
-    };
-
-    argNames.push_back(std::move(arg));
-  };
+  std::vector<std::string> args;
 
   if (!match({TokenType::RightParen})) {
-    LogError("Expected ')' in prototype");
-    return nullptr;
+    while(true) {
+      if (match({TokenType::Identifier})) {
+        std::string arg = std::get<1>(previous().m_value.value());
+        args.push_back(std::move(arg));
+      }
+
+      if (match({TokenType::RightParen}))
+        break;
+
+      if (!match({TokenType::Comma})) {
+        LogError("Expected ',' in prototype");
+        return nullptr;
+      };
+    };
   }
 
-  return std::make_unique<PrototypeAST>(fnName, std::move(argNames));
+  return std::make_unique<PrototypeAST>(fnName, std::move(args));
 }
 
 std::unique_ptr<StmtAST> Parser::parseFunctionDefinition() {
@@ -131,7 +133,7 @@ std::unique_ptr<StmtAST> Parser::parseFunctionDefinition() {
   if (!proto)
     return nullptr;
   if (auto E = parseExpression()) {
-    auto e = std::make_unique<FunctionAST>(std::move(proto), std::move(E));
+    return std::make_unique<FunctionAST>(std::move(proto), std::move(E));
   }
   return nullptr;
 }
