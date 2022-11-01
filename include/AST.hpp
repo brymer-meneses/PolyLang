@@ -30,7 +30,7 @@ public:
     return static_cast<T>(this);
   };
 
-  const ASTType type() const {
+  virtual const ASTType type() const {
     return m_type;
   };
 

@@ -167,7 +167,7 @@ std::vector<std::unique_ptr<StmtAST>> Parser::parse() {
   while (!isFinished()) {
     auto statement =  parseStatement();
     if (statement)
-      statements.push_back(parseStatement());
+      statements.push_back(std::move(statement));
     else
       break;
   }
