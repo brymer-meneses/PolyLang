@@ -2,16 +2,20 @@
 #define AST_HPP
 
 #include "Token.hpp"
+#include "Compiler.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <llvm/IR/Value.h>
 
 enum class ASTType {
   NumberExpr,
   VariableExpr,
   BinaryExpr,
   CallExpr,
-  ExpressionStmt,
+  TopLevelExprStmt,
   FunctionStmt,
   PrototypeStmt,
 };
@@ -28,13 +32,15 @@ public:
 
   const ASTType type() const {
     return m_type;
-  }
+  };
+
 };
 
 class ExprAST : public ASTNode {
 public:
   ExprAST(ASTType type) : ASTNode(type) {};
   virtual ~ExprAST() {};
+  virtual llvm::Value* accept(Compiler& visitor) const = 0;
 };
 
 class NumberExprAST : public ExprAST {
@@ -44,12 +50,24 @@ public:
   double value() const {
     return m_value;
   }
+
+  llvm::Value* accept(Compiler& visitor) const override {
+    return visitor.visitNumberExpr(*this);
+  }
 };
 
 class VariableExprAST : public ExprAST {
   std::string m_name;
 public:
   VariableExprAST(const std::string &name) : m_name(name), ExprAST(ASTType::VariableExpr) {};
+
+  llvm::Value* accept(Compiler& visitor) const override {
+    return visitor.visitVariableExpr(*this);
+  }
+
+  std::string name() const {
+    return m_name;
+  }
 };
 
 class BinaryExprAST : public ExprAST {
@@ -74,10 +92,21 @@ public:
     return static_cast<T>(m_RHS.get());
   }
 
-  TokenType binOp() const {
+  const ExprAST* left() const {
+    return m_LHS.get();
+  }
+
+  const ExprAST* right() const {
+    return m_RHS.get();
+  }
+
+  const TokenType binOp() const {
     return m_operation;
   }
 
+  llvm::Value* accept(Compiler& visitor) const override {
+    return visitor.visitBinaryExpr(*this);
+  }
 };
 
 class CallExprAST : public ExprAST {
@@ -89,25 +118,25 @@ public:
       : m_callee(callee)
       , m_args(std::move(args))
       , ExprAST(ASTType::CallExpr) {};
+
+  llvm::Value* accept(Compiler& visitor) const override {
+    return visitor.visitCallExpr(*this);
+  };
+
+  const std::string& callee() const {
+    return m_callee;
+  }
+
+  const std::vector<std::unique_ptr<ExprAST>>& args() const {
+    return m_args;
+  }
 };
 
 class StmtAST : public ASTNode {
 public:
   virtual ~StmtAST() {};
   StmtAST(ASTType type) : ASTNode(type) {};
-};
-
-class ExpressionStmtAST : public StmtAST {
-  std::unique_ptr<ExprAST> m_expr;
-public:
-  ExpressionStmtAST(std::unique_ptr<ExprAST> expr) 
-      : m_expr(std::move(expr))
-      , StmtAST(ASTType::ExpressionStmt) {};
-
-  template<typename T>
-  T child() const {
-    return static_cast<T>(m_expr.get());
-  }
+  virtual llvm::Function* accept(Compiler& visitor) const = 0;
 };
 
 class PrototypeAST : public StmtAST {
@@ -118,6 +147,18 @@ public:
       : m_name(name)
       , m_args(std::move(args))
       , StmtAST(ASTType::PrototypeStmt) {};
+
+  llvm::Function* accept(Compiler& visitor) const override {
+    return visitor.visitPrototypeStmt(*this);
+  };
+
+  const std::vector<std::string>& args() const {
+    return m_args;
+  }
+
+  const std::string& name() const {
+    return m_name;
+  }
   
 };
 
@@ -131,6 +172,23 @@ public:
       : m_proto(std::move(proto))
       , m_body(std::move(body))
       , StmtAST(ASTType::FunctionStmt) {};
+
+  llvm::Function* accept(Compiler& visitor) const override {
+    return visitor.visitFunctionStmt(*this);
+  };
+
+  template<typename T>
+  T body() {
+    return static_cast<T>(m_body.get());
+  };
+
+  const PrototypeAST* const proto() const {
+    return m_proto.get();
+  };
+
+  const ExprAST* const body() const {
+    return m_body.get();
+  };
 };
 
 #endif // !AST_HPP
