@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Compiler.hpp"
+#include "Logger.hpp"
 #include "PolyLang.hpp"
 #include "Parser.hpp"
 
@@ -34,12 +35,18 @@ void PolyLang::runPrompt() {
 
 void PolyLang::execute(std::string source) {
   Parser parser = Parser(std::move(source));
-  Compiler compiler = Compiler();
   auto statements = parser.parse();
 
   for (int i=0; i<statements.size(); i++) {
-    auto* IR = statements[i].get()->accept(compiler);
+    auto* IR = statements[i].get()->accept(m_compiler);
+
+    if (!IR) {
+      LogError("Compilation Error.");
+      break;
+    }
     IR->print(llvm::errs());
-    IR->eraseFromParent();
+
+    if (statements[i]->type() == ASTType::TopLevelExprStmt)
+      IR->eraseFromParent();
   }
 }

@@ -1,11 +1,13 @@
 #ifndef POLYLANG_HPP
 #define POLYLANG_HPP
 
+#include "Compiler.hpp"
 #include <string>
 
 class PolyLang {
 private:
   bool m_hadError;
+  Compiler m_compiler;
   const int m_argc;
   const char** m_argv;
 
