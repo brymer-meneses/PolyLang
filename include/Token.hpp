@@ -47,6 +47,70 @@ enum class TokenType {
 
 };
 
+inline std::string TokenTypeToString(TokenType type) {
+
+  switch (type) {
+    case TokenType::Eof:
+      return "EOF";
+    case TokenType::Equal:
+      return "=";
+    case TokenType::Plus:
+      return "+";
+    case TokenType::Minus:
+      return "-";
+    case TokenType::Star:
+      return "*";
+    case TokenType::Slash:
+      return "/";
+    case TokenType::Greater:
+      return ">";
+    case TokenType::Lesser:
+      return "<";
+    case TokenType::Bang:
+      return "!";
+    case TokenType::LeftParen:
+      return "(";
+    case TokenType::RightParen:
+      return ")";
+    case TokenType::Comma:
+      return ",";
+    case TokenType::BangEqual:
+      return "!=";
+    case TokenType::EqualEqual:
+      return "==";
+    case TokenType::GreaterEqual:
+      return ">=";
+    case TokenType::LesserEqual:
+      return "<=";
+    case TokenType::And:
+      return "and";
+    case TokenType::Or:
+      return "or";
+    case TokenType::If:
+      return "if";
+    case TokenType::End:
+      return "end";
+    case TokenType::Then:
+      return "then";
+    case TokenType::Else:
+      return "else";
+    case TokenType::ElseIf:
+      return "elif";
+    case TokenType::Let:
+      return "let";
+    case TokenType::Def:
+      return "def";
+    case TokenType::Identifier:
+      return "identifier";
+    case TokenType::Extern:
+      return "extern";
+    case TokenType::Number:
+      return "number";
+    case TokenType::String:
+      return "string";
+  }
+}
+
 struct Token {
   LineLoc m_lineLoc;
   TokenType m_type;

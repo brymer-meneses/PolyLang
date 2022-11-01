@@ -11,6 +11,7 @@ class CallExprAST;
 class StmtAST;
 
 class FunctionAST;
+class TopLevelExprAST;
 class PrototypeAST;
 
 template<typename T>
@@ -32,6 +33,7 @@ public:
   virtual ~StmtVisitor() {};
   virtual T visitFunctionStmt(const FunctionAST& stmt) = 0;
   virtual T visitPrototypeStmt(const PrototypeAST& stmt) = 0;
+  virtual T visitTopLevelExpr(const TopLevelExprAST& stmt) = 0;
 };
 
 #endif // !EXPR_VISITOR_HPP

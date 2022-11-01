@@ -115,6 +115,7 @@ Function* Compiler::visitPrototypeStmt(const PrototypeAST& stmt) {
   return F;
 }
 
+
 Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
 
   auto Proto = stmt.proto();
@@ -150,4 +151,42 @@ Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
   // Error reading body, remove function.
   TheFunction->eraseFromParent();
   return nullptr;
+}
+
+Function* Compiler::visitTopLevelExpr(const TopLevelExprAST& stmt) {
+
+  auto Proto = stmt.proto();
+  auto Body = stmt.body();
+
+  Function* TheFunction = m_module->getFunction(Proto->name());
+
+  if (!TheFunction)
+    TheFunction = codegenStmt(Proto);
+
+  if (!TheFunction)
+    return nullptr;
+
+  BasicBlock* BB = BasicBlock::Create(*m_context, "entry", TheFunction);
+  m_builder->SetInsertPoint(BB);
+
+  m_namedValues.clear();
+  for (auto &Arg : TheFunction->args())
+    m_namedValues[std::string(Arg.getName())];
+  
+  Value* RetVal = codegenExpr(Body);
+
+  if (RetVal) {
+    // Finish off the function.
+    m_builder->CreateRet(RetVal);
+
+    // Validate the generated code, checking for consistency.
+    verifyFunction(*TheFunction);
+
+    return TheFunction;
+  }
+
+  // Error reading body, remove function.
+  TheFunction->eraseFromParent();
+  return nullptr;
+
 }

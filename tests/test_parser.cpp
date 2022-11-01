@@ -1,6 +1,7 @@
 #include "AST.hpp"
 #include "Lexer.hpp"
 #include "Parser.hpp"
+#include "Token.hpp"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -11,9 +12,9 @@ TEST(Parser, NumberExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
+  ASSERT_EQ(statements[0]->type(), ASTType::TopLevelExprStmt);
 
-  auto stmt = statements[0].get()->as<FunctionAST*>();
+  auto stmt = statements[0].get()->as<TopLevelExprAST*>();
   auto expr = stmt->body<NumberExprAST*>();
 
   EXPECT_EQ(expr->value(), 42);
@@ -24,9 +25,9 @@ TEST(Parser, SimpleBinaryExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
+  ASSERT_EQ(statements[0]->type(), ASTType::TopLevelExprStmt);
 
-  auto stmt = statements[0].get()->as<FunctionAST*>();
+  auto stmt = statements[0].get()->as<TopLevelExprAST*>();
 
   auto expr = stmt->body<BinaryExprAST*>();
   auto left  = expr->left<NumberExprAST*>();
@@ -42,8 +43,8 @@ TEST(Parser, GroupingExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
-  auto stmt = statements[0].get()->as<FunctionAST*>();
+  ASSERT_EQ(statements[0]->type(), ASTType::TopLevelExprStmt);
+  auto stmt = statements[0].get()->as<TopLevelExprAST*>();
 
   auto expr = stmt->body<BinaryExprAST*>();
 
@@ -67,9 +68,9 @@ TEST(Parser, ComplexBinaryExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
+  ASSERT_EQ(statements[0]->type(), ASTType::TopLevelExprStmt);
+  auto stmt = statements[0].get()->as<TopLevelExprAST*>();
 
-  auto stmt = statements[0].get()->as<FunctionAST*>();
   auto expr = stmt->body<BinaryExprAST*>();
 
   auto _42  = expr->left<NumberExprAST*>();
@@ -87,4 +88,37 @@ TEST(Parser, ComplexBinaryExpr) {
   EXPECT_EQ(_2->value(), 2);
   EXPECT_EQ(right->binOp(), TokenType::Star);
   EXPECT_EQ(grouping->binOp(), TokenType::Plus);
+}
+
+TEST(Parser, Variable) {
+  Parser parser = Parser("_variableName123");
+  auto statements = parser.parse();
+
+  ASSERT_EQ(statements.size(), 1);
+  ASSERT_EQ(statements[0]->type(), ASTType::TopLevelExprStmt);
+  auto stmt = statements[0].get()->as<TopLevelExprAST*>();
+
+  auto expr = stmt->body<VariableExprAST*>();
+  EXPECT_EQ(expr->name(), "_variableName123");
+}
+
+TEST(Parser, Prototype) {
+  Parser parser = Parser("dist(x,y)");
+  auto statements = parser.parse();
+
+  ASSERT_EQ(statements.size(), 1);
+  ASSERT_EQ(statements[0]->type(), ASTType::TopLevelExprStmt);
+  auto stmt = statements[0].get()->as<TopLevelExprAST*>();
+  auto expr = stmt->body<CallExprAST*>();
+
+  EXPECT_EQ(expr->callee(), "dist");
+
+  auto& args = expr->args();
+
+  auto _x = args[0]->as<VariableExprAST*>();
+  auto _y = args[1]->as<VariableExprAST*>();
+
+  EXPECT_EQ(_x->name(), "x");
+  EXPECT_EQ(_y->name(), "y");
+
 }

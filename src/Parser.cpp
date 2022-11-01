@@ -1,8 +1,10 @@
 #include "AST.hpp"
 #include "Logger.hpp"
 #include "Parser.hpp"
+#include "Token.hpp"
 
 #include <memory>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -11,14 +13,12 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
   if (match({TokenType::Def}))
     return parseFunctionDefinition();
 
-  return parseTopLevelExpression();
+  return parseTopLevelExpr();
 }
 
-std::unique_ptr<StmtAST> Parser::parseTopLevelExpression() {
+std::unique_ptr<StmtAST> Parser::parseTopLevelExpr() {
   if (auto E = parseExpression()) {
-    auto proto = std::make_unique<PrototypeAST>("__anon_expr",
-                                                std::vector<std::string>());
-    return std::make_unique<FunctionAST>(std::move(proto), std::move(E));
+    return std::make_unique<TopLevelExprAST>(std::move(E));
   }
   return nullptr;
 }
@@ -36,11 +36,12 @@ std::unique_ptr<ExprAST> Parser::parsePrimary() {
     return parseNumberExpr();
   
   if (match({TokenType::Identifier}))
-    return parseVariableExpr();
+    return parseIdentifierExpr();
 
   if (match({TokenType::LeftParen}))
     return parseGroupingExpr();
 
+  std::cout << TokenTypeToString(peek().m_type) << std::endl;
   LogError("Unknown token when expecting an expression");
   return nullptr;
 };
@@ -92,21 +93,28 @@ std::unique_ptr<ExprAST> Parser::parseGroupingExpr() {
 }
 
 std::unique_ptr<PrototypeAST> Parser::parsePrototype() {
-  if (!check(TokenType::Identifier)) {
+  if (!match({TokenType::Identifier})) {
     LogError("Expected function name in prototype.");
     return nullptr;
   }
 
   std::string fnName = std::get<1>(peek().m_value.value());
 
-  if (!check(TokenType::LeftParen)) {
+  if (!match({TokenType::LeftParen})) {
     LogError("Expected '(' in prototype");
     return nullptr;
   }
 
   std::vector<std::string> argNames;
   while (match({TokenType::Identifier})) {
+
     std::string arg = std::get<1>(previous().m_value.value());
+
+    if (!match({TokenType::Comma})) {
+      LogError("Expected ')' in prototype");
+      return nullptr;
+    };
+
     argNames.push_back(std::move(arg));
   };
 
@@ -128,37 +136,33 @@ std::unique_ptr<StmtAST> Parser::parseFunctionDefinition() {
   return nullptr;
 }
 
-std::unique_ptr<ExprAST> Parser::parseVariableExpr() {
+std::unique_ptr<ExprAST> Parser::parseIdentifierExpr() {
   std::string idName = std::get<1>(previous().m_value.value());
 
-  advance();  // eat identifier.
-
-  if (!check(TokenType::LeftParen)) // Simple variable ref.
+  if (!match({TokenType::LeftParen})) // Simple variable ref.
     return std::make_unique<VariableExprAST>(idName);
 
-  // Call.
-  advance();
   std::vector<std::unique_ptr<ExprAST>> Args;
-  if (!check(TokenType::RightParen)) {
+  if (!match({TokenType::RightParen})) {
     while (1) {
+
       if (auto Arg = parseExpression())
         Args.push_back(std::move(Arg));
       else
         return nullptr;
 
-      if (!check(TokenType::RightParen))
+      if (match({TokenType::RightParen}))
         break;
 
-      if (!check(TokenType::Comma)) {
-        LogError("Expected ')' or ',' in argument list");
+      if (!match({TokenType::Comma})) {
+        std::cout << TokenTypeToString(peek().m_type);
+        LogError("Expected ',' in argument list");
         return nullptr;
       };
-      advance();
+
     }
   }
 
-  // Eat the ')'.
-  advance();
   return std::make_unique<CallExprAST>(idName, std::move(Args));
 }
 

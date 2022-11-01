@@ -34,6 +34,25 @@ public:
     return m_type;
   };
 
+  virtual const std::string typeToString() const {
+    switch (m_type) {
+      case ASTType::NumberExpr:
+        return "Number Expression";
+      case ASTType::VariableExpr:
+        return "Variable Expression";
+      case ASTType::BinaryExpr:
+        return "Binary Expression";
+      case ASTType::CallExpr:
+        return "Call Expression";
+      case ASTType::TopLevelExprStmt:
+        return "Top Level Expression";
+      case ASTType::FunctionStmt:
+        return "Function Statement";
+      case ASTType::PrototypeStmt:
+        return "Prototype Statement";
+    };
+  }
+
 };
 
 class ExprAST : public ASTNode {
@@ -162,7 +181,7 @@ public:
   
 };
 
-struct FunctionAST : public StmtAST {
+class FunctionAST : public StmtAST {
 private:
   std::unique_ptr<PrototypeAST> m_proto;
   std::unique_ptr<ExprAST> m_body;
@@ -172,6 +191,7 @@ public:
       : m_proto(std::move(proto))
       , m_body(std::move(body))
       , StmtAST(ASTType::FunctionStmt) {};
+
 
   llvm::Function* accept(Compiler& visitor) const override {
     return visitor.visitFunctionStmt(*this);
@@ -190,5 +210,37 @@ public:
     return m_body.get();
   };
 };
+
+class TopLevelExprAST : public StmtAST {
+private:
+  std::unique_ptr<PrototypeAST> m_proto;
+  std::unique_ptr<ExprAST> m_body;
+
+public:
+  TopLevelExprAST(std::unique_ptr<ExprAST> body)
+      : StmtAST(ASTType::TopLevelExprStmt) { 
+        m_proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
+        m_body = std::move(body);
+      };
+
+  llvm::Function* accept(Compiler& visitor) const override {
+    return visitor.visitTopLevelExpr(*this);
+  };
+
+  template<typename T>
+  T body() {
+    return static_cast<T>(m_body.get());
+  };
+
+  const PrototypeAST* const proto() const {
+    return m_proto.get();
+  };
+
+  const ExprAST* const body() const {
+    return m_body.get();
+  };
+
+};
+
 
 #endif // !AST_HPP

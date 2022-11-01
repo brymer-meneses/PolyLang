@@ -33,11 +33,11 @@ private:
   std::unique_ptr<ExprAST> parseNumberExpr();
   std::unique_ptr<ExprAST> parseGroupingExpr();
   std::unique_ptr<ExprAST> parseBinaryExpr();
-  std::unique_ptr<ExprAST> parseVariableExpr();
+  std::unique_ptr<ExprAST> parseIdentifierExpr();
 
   std::unique_ptr<StmtAST> parseStatement();
   std::unique_ptr<PrototypeAST> parsePrototype();
-  std::unique_ptr<StmtAST> parseTopLevelExpression();
+  std::unique_ptr<StmtAST> parseTopLevelExpr();
   std::unique_ptr<StmtAST> parseFunctionDefinition();
 
   std::unique_ptr<ExprAST> parseBinOpRHS(int exprPrec, std::unique_ptr<ExprAST> LHS);

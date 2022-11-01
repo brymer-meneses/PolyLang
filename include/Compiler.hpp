@@ -38,6 +38,7 @@ public:
 
   llvm::Function* visitFunctionStmt(const FunctionAST& stmt) override;
   llvm::Function* visitPrototypeStmt(const PrototypeAST& stmt) override;
+  llvm::Function* visitTopLevelExpr(const TopLevelExprAST& stmt) override;
 };
 
 
