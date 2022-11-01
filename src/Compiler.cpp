@@ -26,7 +26,7 @@ Value* Compiler::visitVariableExpr(const VariableExprAST& expr) {
   Value* v = m_namedValues[expr.name()];
 
   if (!v)
-    LogError("Unknown variable name");
+    LogError("Unknown variable name.");
 
   return v;
 }
@@ -134,7 +134,7 @@ Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
 
   m_namedValues.clear();
   for (auto &Arg : TheFunction->args())
-    m_namedValues[std::string(Arg.getName())];
+    m_namedValues[std::string(Arg.getName())] = &Arg;
   
   Value* RetVal = codegenExpr(Body);
 
