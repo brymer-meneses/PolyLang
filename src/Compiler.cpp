@@ -45,9 +45,20 @@ Value* Compiler::visitBinaryExpr(const BinaryExprAST& expr) {
       return m_builder->CreateFSub(L, R, "subtmp");
     case TokenType::Star:
       return m_builder->CreateFMul(L, R, "multmp");
+    case TokenType::Slash:
+      return m_builder->CreateFDiv(L, R, "multmp");
 
     case TokenType::Lesser:
       L = m_builder->CreateFCmpULT(L, R, "cmptmp");
+      return m_builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*m_context), "booltmp");
+    case TokenType::LesserEqual:
+      L = m_builder->CreateFCmpULE(L, R, "cmptmp");
+      return m_builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*m_context), "booltmp");
+    case TokenType::Greater:
+      L = m_builder->CreateFCmpUGT(L, R, "cmptmp");
+      return m_builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*m_context), "booltmp");
+    case TokenType::GreaterEqual:
+      L = m_builder->CreateFCmpUGE(L, R, "cmptmp");
       return m_builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*m_context), "booltmp");
 
     default:
