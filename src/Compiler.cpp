@@ -46,7 +46,7 @@ Value* Compiler::visitBinaryExpr(const BinaryExprAST& expr) {
     case TokenType::Star:
       return m_builder->CreateFMul(L, R, "multmp");
     case TokenType::Slash:
-      return m_builder->CreateFDiv(L, R, "multmp");
+      return m_builder->CreateFDiv(L, R, "divtmp");
 
     case TokenType::Lesser:
       L = m_builder->CreateFCmpULT(L, R, "cmptmp");
