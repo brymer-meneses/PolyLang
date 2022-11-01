@@ -11,10 +11,10 @@ TEST(Parser, NumberExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::ExpressionStmt);
+  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
 
-  auto stmt = statements[0].get()->as<ExpressionStmtAST*>();
-  auto expr = stmt->child<NumberExprAST*>();
+  auto stmt = statements[0].get()->as<FunctionAST*>();
+  auto expr = stmt->body<NumberExprAST*>();
 
   EXPECT_EQ(expr->value(), 42);
 }
@@ -24,11 +24,11 @@ TEST(Parser, SimpleBinaryExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::ExpressionStmt);
+  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
 
-  auto stmt = statements[0].get()->as<ExpressionStmtAST*>();
+  auto stmt = statements[0].get()->as<FunctionAST*>();
 
-  auto expr = stmt->child<BinaryExprAST*>();
+  auto expr = stmt->body<BinaryExprAST*>();
   auto left  = expr->left<NumberExprAST*>();
   auto right = expr->right<NumberExprAST*>();
 
@@ -42,10 +42,10 @@ TEST(Parser, GroupingExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::ExpressionStmt);
-  auto stmt = statements[0].get()->as<ExpressionStmtAST*>();
+  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
+  auto stmt = statements[0].get()->as<FunctionAST*>();
 
-  auto expr = stmt->child<BinaryExprAST*>();
+  auto expr = stmt->body<BinaryExprAST*>();
 
   auto left  = expr->left<NumberExprAST*>();
   auto grouping = expr->right<BinaryExprAST*>();
@@ -67,10 +67,10 @@ TEST(Parser, ComplexBinaryExpr) {
   auto statements = parser.parse();
 
   ASSERT_EQ(statements.size(), 1);
-  ASSERT_EQ(statements[0]->type(), ASTType::ExpressionStmt);
+  ASSERT_EQ(statements[0]->type(), ASTType::FunctionStmt);
 
-  auto stmt = statements[0].get()->as<ExpressionStmtAST*>();
-  auto expr = stmt->child<BinaryExprAST*>();
+  auto stmt = statements[0].get()->as<FunctionAST*>();
+  auto expr = stmt->body<BinaryExprAST*>();
 
   auto _42  = expr->left<NumberExprAST*>();
   auto right = expr->right<BinaryExprAST*>();

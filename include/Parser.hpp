@@ -36,8 +36,8 @@ private:
   std::unique_ptr<ExprAST> parseVariableExpr();
 
   std::unique_ptr<StmtAST> parseStatement();
-  std::unique_ptr<StmtAST> parseExpressionStmt();
   std::unique_ptr<PrototypeAST> parsePrototype();
+  std::unique_ptr<StmtAST> parseTopLevelExpression();
   std::unique_ptr<StmtAST> parseFunctionDefinition();
 
   std::unique_ptr<ExprAST> parseBinOpRHS(int exprPrec, std::unique_ptr<ExprAST> LHS);

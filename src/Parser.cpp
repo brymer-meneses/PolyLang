@@ -1,27 +1,26 @@
 #include "AST.hpp"
 #include "Logger.hpp"
 #include "Parser.hpp"
-#include "Visitor.hpp"
 
 #include <memory>
 #include <utility>
 #include <vector>
-#include <iostream>
 
 std::unique_ptr<StmtAST> Parser::parseStatement() {
 
   if (match({TokenType::Def}))
     return parseFunctionDefinition();
 
-  return parseExpressionStmt();
+  return parseTopLevelExpression();
 }
 
-std::unique_ptr<StmtAST> Parser::parseExpressionStmt() {
-  std::unique_ptr<ExprAST> expr = parseExpression();
-
-  if (!expr)
-    return nullptr;
-  return std::make_unique<ExpressionStmtAST>(std::move(expr));
+std::unique_ptr<StmtAST> Parser::parseTopLevelExpression() {
+  if (auto E = parseExpression()) {
+    auto proto = std::make_unique<PrototypeAST>("__anon_expr",
+                                                std::vector<std::string>());
+    return std::make_unique<FunctionAST>(std::move(proto), std::move(E));
+  }
+  return nullptr;
 }
 
 std::unique_ptr<ExprAST> Parser::parseExpression() {
@@ -123,8 +122,9 @@ std::unique_ptr<StmtAST> Parser::parseFunctionDefinition() {
   std::unique_ptr<PrototypeAST> proto = parsePrototype();
   if (!proto)
     return nullptr;
-  if (auto E = parseExpression())
-    return std::make_unique<FunctionAST>(std::move(proto), std::move(E));
+  if (auto E = parseExpression()) {
+    auto e = std::make_unique<FunctionAST>(std::move(proto), std::move(E));
+  }
   return nullptr;
 }
 
@@ -165,7 +165,11 @@ std::unique_ptr<ExprAST> Parser::parseVariableExpr() {
 std::vector<std::unique_ptr<StmtAST>> Parser::parse() {
   std::vector<std::unique_ptr<StmtAST>> statements = {};
   while (!isFinished()) {
-    statements.push_back(parseStatement());
+    auto statement =  parseStatement();
+    if (statement)
+      statements.push_back(parseStatement());
+    else
+      break;
   }
 
   return std::move(statements);
