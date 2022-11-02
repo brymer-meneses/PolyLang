@@ -99,19 +99,19 @@ std::unique_ptr<PrototypeAST> Parser::parsePrototype() {
   }
 
   assert(previous().m_value.has_value());
-  std::string fnName = std::get<1>(previous().m_value.value());
+  std::string_view fnName = std::get<1>(previous().m_value.value());
 
   if (!match({TokenType::LeftParen})) {
     LogError("Expected '(' in prototype");
     return nullptr;
   }
 
-  std::vector<std::string> args;
+  std::vector<std::string_view> args;
 
   if (!match({TokenType::RightParen})) {
     while(true) {
       if (match({TokenType::Identifier})) {
-        std::string arg = std::get<1>(previous().m_value.value());
+        std::string_view arg = std::get<1>(previous().m_value.value());
         args.push_back(std::move(arg));
       }
 
@@ -139,7 +139,7 @@ std::unique_ptr<StmtAST> Parser::parseFunctionDefinition() {
 }
 
 std::unique_ptr<ExprAST> Parser::parseIdentifierExpr() {
-  std::string idName = std::get<1>(previous().m_value.value());
+  std::string_view idName = std::get<1>(previous().m_value.value());
 
   if (!match({TokenType::LeftParen})) // Simple variable ref.
     return std::make_unique<VariableExprAST>(idName);

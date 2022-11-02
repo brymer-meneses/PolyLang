@@ -21,8 +21,8 @@ public:
 
 private:
   void runPrompt();
-  void execute(std::string source);
-  void runFile(std::string path);
+  void execute(std::string_view source);
+  void runFile(std::string_view path);
 };
 
 

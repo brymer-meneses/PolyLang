@@ -8,15 +8,15 @@
 #include <iostream>
 
 struct Error {
-  std::string m_message;
-  std::optional<std::string> m_tip;
+  std::string_view m_message;
+  std::optional<std::string_view> m_tip;
   std::optional<FileLoc> m_fileLoc;
   std::optional<LineLoc> m_lineLoc;
 
-  Error(std::string message)
+  Error(std::string_view message)
       : m_message(message), m_tip(std::nullopt), m_fileLoc(std::nullopt), m_lineLoc(std::nullopt) {}
 
-  Error& setTip(std::string tip) {
+  Error& setTip(std::string_view tip) {
     m_tip = tip;
     return *this;
   }

@@ -14,10 +14,10 @@ private:
   std::size_t m_start;
   std::size_t m_current;
   std::size_t m_line;
-  std::string m_source;
+  std::string_view m_source;
 
 public:
-  Lexer(const std::string source) 
+  Lexer(std::string_view source) 
     : m_source(source),
       m_current(0),
       m_start(0),

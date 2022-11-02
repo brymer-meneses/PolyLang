@@ -6,10 +6,11 @@
 #include <cstring>
 #include <optional>
 #include <vector>
+#include <charconv>
 
 #include <map>
 
-const static std::map<std::string, TokenType> KEYWORDS = {
+const static std::map<std::string_view, TokenType> KEYWORDS = {
   { "and"    ,  TokenType::And    },
   { "or"     ,  TokenType::Or     },
   { "def"    ,  TokenType::Def    },
@@ -126,7 +127,7 @@ Token Lexer::scanString() {
 
   advance();
 
-  std::string substring = m_source.substr(m_start+1, m_current - m_start-2);
+  std::string_view substring = m_source.substr(m_start+1, m_current - m_start-2);
 
   return Token(TokenType::String, substring, LineLoc(m_start+1, m_current-1, m_line));
 }
@@ -135,7 +136,7 @@ Token Lexer::scanIdentifier() {
   while (std::isalnum(peek()) || peek() == '_')
     advance();
 
-  std::string keyword = m_source.substr(m_start, m_current-m_start);
+  std::string_view keyword = m_source.substr(m_start, m_current-m_start);
 
   TokenType type;
   try {
@@ -159,8 +160,9 @@ Token Lexer::scanNumber() {
       advance();
   }
 
-  std::string string_lexeme = m_source.substr(m_start, m_start - m_current);
-  double number = std::strtod(std::move(string_lexeme).c_str(), nullptr);
+  double num;
+  std::string_view string_lexeme = m_source.substr(m_start, m_start - m_current);
+  std::from_chars(string_lexeme.data(), string_lexeme.data() + string_lexeme.size(), num);
 
-  return Token(TokenType::Number, number, LineLoc(m_start, m_current, m_line));
+  return Token(TokenType::Number, num, LineLoc(m_start, m_current, m_line));
 }

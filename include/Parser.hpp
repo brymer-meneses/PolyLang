@@ -19,8 +19,8 @@ public:
   Parser(const std::vector<Token> tokens) 
       : m_tokens(tokens), 
         m_current(0) { };
-  Parser(const std::string source) {
-    Lexer lexer = Lexer(std::move(source));
+  Parser(const std::string_view source) {
+    Lexer lexer = Lexer(source);
     m_tokens = lexer.scanTokens();
     m_current = 0;
   };

@@ -15,7 +15,7 @@ void PolyLang::run() {
   runFile(m_argv[1]);
 };
 
-void PolyLang::runFile(std::string path) {
+void PolyLang::runFile(std::string_view path) {
   std::cout << path << std::endl;
 }
 
@@ -33,8 +33,8 @@ void PolyLang::runPrompt() {
 
 }
 
-void PolyLang::execute(std::string source) {
-  Parser parser = Parser(std::move(source));
+void PolyLang::execute(std::string_view source) {
+  Parser parser = Parser(source);
   auto statements = parser.parse();
 
   for (int i=0; i<statements.size(); i++) {

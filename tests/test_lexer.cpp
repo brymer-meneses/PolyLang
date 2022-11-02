@@ -53,7 +53,7 @@ TEST(Lexer, SimpleComment) {
   auto tokens = lexer.scanTokens();
 
   ASSERT_EQ(tokens.size(), 1);
-  EXPECT_EQ(tokens[0].m_type, TokenType::Eof);
+  EXPECT_EQ(tokens.back().m_type, TokenType::Eof);
 }
 
 TEST(Lexer, ComplexComment) {
@@ -61,7 +61,7 @@ TEST(Lexer, ComplexComment) {
   auto tokens = lexer.scanTokens();
 
   ASSERT_EQ(tokens.size(), 5);
-  EXPECT_EQ(tokens[-1].m_type, TokenType::Eof);
+  EXPECT_EQ(tokens.back().m_type, TokenType::Eof);
 }
 
 TEST(Lexer, String) {
@@ -113,7 +113,7 @@ TEST(Lexer, Identifiers) {
     EXPECT_EQ(tokens[i].m_value.value(), Object(correctNames[i]));
   }
 
-  ASSERT_EQ(tokens[-1].m_type, TokenType::Eof);
+  ASSERT_EQ(tokens.back().m_type, TokenType::Eof);
 }
 
 TEST(Lexer, Number) {
@@ -129,6 +129,6 @@ TEST(Lexer, Number) {
     EXPECT_EQ(tokens[i].m_value.value(), Object(correctNumbers[i]));
   }
 
-  ASSERT_EQ(tokens[-1].m_type, TokenType::Eof);
+  ASSERT_EQ(tokens.back().m_type, TokenType::Eof);
 
 }

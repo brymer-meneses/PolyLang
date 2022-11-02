@@ -19,7 +19,7 @@ private:
   std::unique_ptr<llvm::LLVMContext> m_context;
   std::unique_ptr<llvm::IRBuilder<>> m_builder;
   std::unique_ptr<llvm::Module> m_module;
-  std::map<std::string, llvm::Value*> m_namedValues;
+  std::map<std::string_view, llvm::Value*> m_namedValues;
   
 public:
   Compiler() {

@@ -76,15 +76,15 @@ public:
 };
 
 class VariableExprAST : public ExprAST {
-  std::string m_name;
+  std::string_view m_name;
 public:
-  VariableExprAST(const std::string &name) : m_name(name), ExprAST(ASTType::VariableExpr) {};
+  VariableExprAST(std::string_view name) : m_name(name), ExprAST(ASTType::VariableExpr) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visitVariableExpr(*this);
   }
 
-  std::string name() const {
+  std::string_view name() const {
     return m_name;
   }
 };
@@ -129,10 +129,10 @@ public:
 };
 
 class CallExprAST : public ExprAST {
-  std::string m_callee;
+  std::string_view m_callee;
   std::vector<std::unique_ptr<ExprAST>> m_args;
 public:
-  CallExprAST(const std::string &callee, 
+  CallExprAST(std::string_view callee, 
               std::vector<std::unique_ptr<ExprAST>> args)
       : m_callee(callee)
       , m_args(std::move(args))
@@ -142,7 +142,7 @@ public:
     return visitor.visitCallExpr(*this);
   };
 
-  const std::string& callee() const {
+  const std::string_view callee() const {
     return m_callee;
   }
 
@@ -159,23 +159,23 @@ public:
 };
 
 class PrototypeAST : public StmtAST {
-  std::string m_name;
-  std::vector<std::string> m_args;
+  std::string_view m_name;
+  std::vector<std::string_view> m_args;
 public:
-  PrototypeAST(const std::string &name, std::vector<std::string> args)
+  PrototypeAST(std::string_view name, std::vector<std::string_view> args)
       : m_name(name)
-      , m_args(std::move(args))
+      , m_args(args)
       , StmtAST(ASTType::PrototypeStmt) {};
 
   llvm::Function* accept(Compiler& visitor) const override {
     return visitor.visitPrototypeStmt(*this);
   };
 
-  const std::vector<std::string>& args() const {
+  const std::vector<std::string_view>& args() const {
     return m_args;
   }
 
-  const std::string& name() const {
+  std::string_view name() const {
     return m_name;
   }
   
@@ -219,7 +219,7 @@ private:
 public:
   TopLevelExprAST(std::unique_ptr<ExprAST> body)
       : StmtAST(ASTType::TopLevelExprStmt) { 
-        m_proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
+        m_proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string_view>());
         m_body = std::move(body);
       };
 

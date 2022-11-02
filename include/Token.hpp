@@ -47,7 +47,7 @@ enum class TokenType {
 
 };
 
-inline std::string TokenTypeToString(TokenType type) {
+inline std::string_view TokenTypeToString(TokenType type) {
 
   switch (type) {
     case TokenType::Eof:
