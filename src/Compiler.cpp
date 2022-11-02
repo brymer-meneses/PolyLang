@@ -134,7 +134,7 @@ Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
 
   m_namedValues.clear();
   for (auto &Arg : TheFunction->args())
-    m_namedValues[std::string(Arg.getName())] = &Arg;
+    m_namedValues[Arg.getName()] = &Arg;
   
   Value* RetVal = codegenExpr(Body);
 
