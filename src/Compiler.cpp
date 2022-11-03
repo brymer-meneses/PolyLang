@@ -9,19 +9,19 @@
 
 using namespace llvm;
 
-Value* Compiler::codegenExpr(const ExprAST* const expr) {
+Value* Compiler::codegen(const ExprAST* const expr) {
   return expr->accept(*this);
 };
 
-Function* Compiler::codegenStmt(const StmtAST* const stmt) {
+Function* Compiler::codegen(const StmtAST* const stmt) {
   return stmt->accept(*this);
 };
 
-Value* Compiler::visitNumberExpr(const NumberExprAST& expr) {
+Value* Compiler::visit(const NumberExprAST& expr) {
   return ConstantFP::get(*m_context, llvm::APFloat(expr.value()));
 }
 
-Value* Compiler::visitVariableExpr(const VariableExprAST& expr) {
+Value* Compiler::visit(const VariableExprAST& expr) {
 
   Value* v = m_namedValues[expr.name()];
 
@@ -31,9 +31,9 @@ Value* Compiler::visitVariableExpr(const VariableExprAST& expr) {
   return v;
 }
 
-Value* Compiler::visitBinaryExpr(const BinaryExprAST& expr) {
-  Value *L = codegenExpr(expr.left());
-  Value *R = codegenExpr(expr.right());
+Value* Compiler::visit(const BinaryExprAST& expr) {
+  Value *L = codegen(expr.left());
+  Value *R = codegen(expr.right());
 
   if (!L || !R)
     return nullptr;
@@ -68,7 +68,7 @@ Value* Compiler::visitBinaryExpr(const BinaryExprAST& expr) {
 
 }
 
-Value* Compiler::visitCallExpr(const CallExprAST& expr) {
+Value* Compiler::visit(const CallExprAST& expr) {
 
   Function* CalleeF = m_module->getFunction(expr.callee());
 
@@ -88,7 +88,7 @@ Value* Compiler::visitCallExpr(const CallExprAST& expr) {
 
   for (unsigned i=0; i != args_size; ++i) {
     // compile
-    argsV.push_back( codegenExpr( expr.args()[i].get() ) );
+    argsV.push_back( codegen( expr.args()[i].get() ) );
 
     // if the last arg is a nullptr
     if (!argsV.back())
@@ -100,7 +100,7 @@ Value* Compiler::visitCallExpr(const CallExprAST& expr) {
 
 }
 
-Function* Compiler::visitPrototypeStmt(const PrototypeAST& stmt) {
+Function* Compiler::visit(const PrototypeAST& stmt) {
 
   auto Args = stmt.args();
 
@@ -116,7 +116,7 @@ Function* Compiler::visitPrototypeStmt(const PrototypeAST& stmt) {
 }
 
 
-Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
+Function* Compiler::visit(const FunctionAST& stmt) {
 
   auto Proto = stmt.proto();
   auto Body = stmt.body();
@@ -124,7 +124,7 @@ Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
   Function* TheFunction = m_module->getFunction(Proto->name());
 
   if (!TheFunction)
-    TheFunction = codegenStmt(Proto);
+    TheFunction = codegen(Proto);
 
   if (!TheFunction)
     return nullptr;
@@ -136,7 +136,7 @@ Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
   for (auto &Arg : TheFunction->args())
     m_namedValues[Arg.getName()] = &Arg;
   
-  Value* RetVal = codegenExpr(Body);
+  Value* RetVal = codegen(Body);
 
   if (RetVal) {
     // Finish off the function.
@@ -153,7 +153,7 @@ Function* Compiler::visitFunctionStmt(const FunctionAST& stmt) {
   return nullptr;
 }
 
-Function* Compiler::visitTopLevelExpr(const TopLevelExprAST& stmt) {
+Function* Compiler::visit(const TopLevelExprAST& stmt) {
 
   auto Proto = stmt.proto();
   auto Body = stmt.body();
@@ -161,7 +161,7 @@ Function* Compiler::visitTopLevelExpr(const TopLevelExprAST& stmt) {
   Function* TheFunction = m_module->getFunction(Proto->name());
 
   if (!TheFunction)
-    TheFunction = codegenStmt(Proto);
+    TheFunction = codegen(Proto);
 
   if (!TheFunction)
     return nullptr;
@@ -173,7 +173,7 @@ Function* Compiler::visitTopLevelExpr(const TopLevelExprAST& stmt) {
   for (auto &Arg : TheFunction->args())
     m_namedValues[std::string(Arg.getName())];
   
-  Value* RetVal = codegenExpr(Body);
+  Value* RetVal = codegen(Body);
 
   if (RetVal) {
     // Finish off the function.

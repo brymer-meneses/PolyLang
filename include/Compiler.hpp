@@ -8,6 +8,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/IR/IRBuilder.h>
 
 #include <map>
@@ -25,22 +26,28 @@ private:
   
 public:
   Compiler() {
-    m_context = std::make_unique<llvm::LLVMContext>();
-    m_module = std::make_unique<llvm::Module>("MAIN", *m_context);
-    m_builder = std::make_unique<llvm::IRBuilder<>>(*m_context);
+    initializeModuleAndPassManager();
   };
 
-  llvm::Value* codegenExpr(const ExprAST* const expr);
-  llvm::Function* codegenStmt(const StmtAST* const expr);
+  void initializeModuleAndPassManager() {
+    m_context = std::make_unique<llvm::LLVMContext>();
+    m_module = std::make_unique<llvm::Module>("__PolyLangMain", *m_context);
+    m_builder = std::make_unique<llvm::IRBuilder<>>(*m_context);
 
-  llvm::Value* visitNumberExpr(const NumberExprAST& expr) override;
-  llvm::Value* visitVariableExpr(const VariableExprAST& expr) override;
-  llvm::Value* visitBinaryExpr(const BinaryExprAST& expr) override;
-  llvm::Value* visitCallExpr(const CallExprAST& expr) override;
 
-  llvm::Function* visitFunctionStmt(const FunctionAST& stmt) override;
-  llvm::Function* visitPrototypeStmt(const PrototypeAST& stmt) override;
-  llvm::Function* visitTopLevelExpr(const TopLevelExprAST& stmt) override;
+  };
+
+  llvm::Value* codegen(const ExprAST* const expr);
+  llvm::Function* codegen(const StmtAST* const stmt);
+
+  llvm::Value* visit(const NumberExprAST& expr) override;
+  llvm::Value* visit(const VariableExprAST& expr) override;
+  llvm::Value* visit(const BinaryExprAST& expr) override;
+  llvm::Value* visit(const CallExprAST& expr) override;
+
+  llvm::Function* visit(const FunctionAST& stmt) override;
+  llvm::Function* visit(const PrototypeAST& stmt) override;
+  llvm::Function* visit(const TopLevelExprAST& stmt) override;
 
 friend PolyLang;
 };

@@ -71,7 +71,7 @@ public:
   }
 
   llvm::Value* accept(Compiler& visitor) const override {
-    return visitor.visitNumberExpr(*this);
+    return visitor.visit(*this);
   }
 };
 
@@ -81,7 +81,7 @@ public:
   VariableExprAST(std::string_view name) : m_name(name), ExprAST(ASTType::VariableExpr) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
-    return visitor.visitVariableExpr(*this);
+    return visitor.visit(*this);
   }
 
   std::string_view name() const {
@@ -124,7 +124,7 @@ public:
   }
 
   llvm::Value* accept(Compiler& visitor) const override {
-    return visitor.visitBinaryExpr(*this);
+    return visitor.visit(*this);
   }
 };
 
@@ -139,7 +139,7 @@ public:
       , ExprAST(ASTType::CallExpr) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
-    return visitor.visitCallExpr(*this);
+    return visitor.visit(*this);
   };
 
   const std::string_view callee() const {
@@ -168,7 +168,7 @@ public:
       , StmtAST(ASTType::PrototypeStmt) {};
 
   llvm::Function* accept(Compiler& visitor) const override {
-    return visitor.visitPrototypeStmt(*this);
+    return visitor.visit(*this);
   };
 
   const std::vector<std::string_view>& args() const {
@@ -194,7 +194,7 @@ public:
 
 
   llvm::Function* accept(Compiler& visitor) const override {
-    return visitor.visitFunctionStmt(*this);
+    return visitor.visit(*this);
   };
 
   template<typename T>
@@ -224,7 +224,7 @@ public:
       };
 
   llvm::Function* accept(Compiler& visitor) const override {
-    return visitor.visitTopLevelExpr(*this);
+    return visitor.visit(*this);
   };
 
   template<typename T>

@@ -19,10 +19,10 @@ class ExprVisitor {
 
 public:
   virtual ~ExprVisitor() {};
-  virtual T visitNumberExpr(const NumberExprAST& expr) = 0;
-  virtual T visitVariableExpr(const VariableExprAST& expr) = 0;
-  virtual T visitBinaryExpr(const BinaryExprAST& expr) = 0;
-  virtual T visitCallExpr(const CallExprAST& expr) = 0;
+  virtual T visit(const NumberExprAST& expr) = 0;
+  virtual T visit(const VariableExprAST& expr) = 0;
+  virtual T visit(const BinaryExprAST& expr) = 0;
+  virtual T visit(const CallExprAST& expr) = 0;
 
 };
 
@@ -31,9 +31,9 @@ class StmtVisitor {
 
 public:
   virtual ~StmtVisitor() {};
-  virtual T visitFunctionStmt(const FunctionAST& stmt) = 0;
-  virtual T visitPrototypeStmt(const PrototypeAST& stmt) = 0;
-  virtual T visitTopLevelExpr(const TopLevelExprAST& stmt) = 0;
+  virtual T visit(const FunctionAST& stmt) = 0;
+  virtual T visit(const PrototypeAST& stmt) = 0;
+  virtual T visit(const TopLevelExprAST& stmt) = 0;
 };
 
 #endif // !EXPR_VISITOR_HPP
