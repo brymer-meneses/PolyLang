@@ -13,6 +13,8 @@
 #include <map>
 #include <memory>
 
+class PolyLang;
+
 class Compiler : public ExprVisitor<llvm::Value*>, public StmtVisitor<llvm::Function*> {
 
 private:
@@ -39,6 +41,8 @@ public:
   llvm::Function* visitFunctionStmt(const FunctionAST& stmt) override;
   llvm::Function* visitPrototypeStmt(const PrototypeAST& stmt) override;
   llvm::Function* visitTopLevelExpr(const TopLevelExprAST& stmt) override;
+
+friend PolyLang;
 };
 
 

@@ -31,6 +31,7 @@ void PolyLang::runPrompt() {
     execute(inputLine);
   }
 
+  m_compiler.m_module->print(llvm::errs(), nullptr);
 }
 
 void PolyLang::execute(std::string_view source) {
