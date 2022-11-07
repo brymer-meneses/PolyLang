@@ -67,15 +67,17 @@ struct VariableExprAST : public ExprAST {
 };
 
 struct BinaryExprAST : public ExprAST {
-  TokenType operation;
-  std::unique_ptr<ExprAST> LHS, RHS;
+private:
+  std::unique_ptr<ExprAST> m_left, m_right;
+public:
 
+  TokenType operation;
   BinaryExprAST(TokenType operation, 
-                std::unique_ptr<ExprAST> LHS,
-                std::unique_ptr<ExprAST> RHS)
+                std::unique_ptr<ExprAST> left,
+                std::unique_ptr<ExprAST> right)
       : operation(operation)
-      , LHS(std::move(LHS))
-      , RHS(std::move(RHS)) { };
+      , m_left(std::move(left))
+      , m_right(std::move(right)) { };
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
@@ -84,6 +86,26 @@ struct BinaryExprAST : public ExprAST {
   AstType type() const override {
     return AstType::BinaryExpr;
   }
+
+  template<typename T>
+  T left() {
+    return static_cast<T>(m_left.get());
+  };
+
+  template<typename T>
+  T right() {
+    return static_cast<T>(m_right.get());
+  };
+
+  const ExprAST* left() const {
+    return m_left.get();
+  }
+
+  const ExprAST* right() const {
+    return m_right.get();
+  }
+
+
 };
 
 struct CallExprAST : public ExprAST {
@@ -137,9 +159,8 @@ struct PrototypeAST : public StmtAST {
 };
 
 struct FunctionAST : public StmtAST {
-
-  std::unique_ptr<PrototypeAST>proto;
   std::unique_ptr<ExprAST> body;
+  std::unique_ptr<PrototypeAST>proto;
 
   FunctionAST(std::unique_ptr<PrototypeAST> proto, 
               std::unique_ptr<ExprAST> body)

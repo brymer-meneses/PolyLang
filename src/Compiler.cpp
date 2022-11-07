@@ -32,8 +32,8 @@ Value* Compiler::visit(const VariableExprAST& expr) {
 }
 
 Value* Compiler::visit(const BinaryExprAST& expr) {
-  Value *L = codegen(expr.LHS.get());
-  Value *R = codegen(expr.RHS.get());
+  Value *L = codegen(expr.left());
+  Value *R = codegen(expr.right());
 
   if (!L || !R)
     return nullptr;
@@ -48,6 +48,9 @@ Value* Compiler::visit(const BinaryExprAST& expr) {
     case TokenType::Slash:
       return m_builder->CreateFDiv(L, R, "divtmp");
 
+    case TokenType::BangEqual:
+      L = m_builder->CreateFCmpUNE(L, R, "cmptmp");
+      return m_builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*m_context), "booltmp");
     case TokenType::Lesser:
       L = m_builder->CreateFCmpULT(L, R, "cmptmp");
       return m_builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*m_context), "booltmp");

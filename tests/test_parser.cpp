@@ -32,8 +32,8 @@ TEST(Parser, SimpleBinaryExpr) {
   auto stmt = statements[0]->as<TopLevelExprAST*>();
 
   auto expr = stmt->body->as<BinaryExprAST*>();
-  auto left  = expr->LHS.get()->as<NumberExprAST*>();
-  auto right = expr->RHS.get()->as<NumberExprAST*>();
+  auto left  = expr->left<NumberExprAST*>();
+  auto right = expr->right<NumberExprAST*>();
 
   EXPECT_EQ(expr->operation, TokenType::Plus);
   EXPECT_EQ(left->value, 42);
@@ -50,12 +50,12 @@ TEST(Parser, GroupingExpr) {
 
   auto expr = stmt->body->as<BinaryExprAST*>();
 
-  auto left  = expr->LHS.get()->as<NumberExprAST*>();
-  auto grouping = expr->RHS.get()->as<BinaryExprAST*>();
+  auto left  = expr->left<NumberExprAST*>();
+  auto grouping = expr->right<BinaryExprAST*>();
 
-  auto g_left = grouping->LHS.get()->as<NumberExprAST*>();
+  auto g_left = grouping->left<NumberExprAST*>();
   auto g_op   =  grouping->operation;
-  auto g_right = grouping->RHS.get()->as<NumberExprAST*>();
+  auto g_right = grouping->right<NumberExprAST*>();
 
   EXPECT_EQ(expr->operation, TokenType::Plus);
   EXPECT_EQ(left->value, 2);
@@ -75,13 +75,13 @@ TEST(Parser, ComplexBinaryExpr) {
 
   auto expr = stmt->body->as<BinaryExprAST*>();
 
-  auto _42  = expr->LHS.get()->as<NumberExprAST*>();
-  auto right = expr->RHS.get()->as<BinaryExprAST*>();
+  auto _42  = expr->left<NumberExprAST*>();
+  auto right = expr->right<BinaryExprAST*>();
 
-  auto _100 = right->LHS.get()->as<NumberExprAST*>();
-  auto grouping = right->RHS.get()->as<BinaryExprAST*>();
-  auto _60 = grouping->LHS.get()->as<NumberExprAST*>();
-  auto _2 = grouping->RHS.get()->as<NumberExprAST*>();
+  auto _100 = right->left<NumberExprAST*>();
+  auto grouping = right->right<BinaryExprAST*>();
+  auto _60 = grouping->left<NumberExprAST*>();
+  auto _2 = grouping->right<NumberExprAST*>();
 
   EXPECT_EQ(expr->operation, TokenType::Plus);
   EXPECT_EQ(_42->value, 42);
@@ -138,7 +138,7 @@ TEST(Parser, FunctionDefinition) {
   auto stmt = statements[0]->as<FunctionAST*>();
   auto expr = stmt->body.get()->as<BinaryExprAST*>();
 
-  EXPECT_EQ(expr->LHS.get()->as<VariableExprAST*>()->name, "x");
+  EXPECT_EQ(expr->left<VariableExprAST*>()->name, "x");
   EXPECT_EQ(expr->operation, TokenType::Plus);
-  EXPECT_EQ(expr->RHS.get()->as<VariableExprAST*>()->name, "y");
+  EXPECT_EQ(expr->right<VariableExprAST*>()->name, "y");
 }
