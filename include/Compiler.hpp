@@ -40,17 +40,17 @@ public:
 
   };
 
-  Value* codegen(const ExprAST* const expr);
-  Function* codegen(const StmtAST* const stmt);
+  Value* codegen(const Expr* const expr);
+  Function* codegen(const Stmt* const stmt);
 
-  Value* visit(const NumberExprAST& expr) override;
-  Value* visit(const VariableExprAST& expr) override;
-  Value* visit(const BinaryExprAST& expr) override;
-  Value* visit(const CallExprAST& expr) override;
+  Value* visit(const NumberExpr& expr) override;
+  Value* visit(const VariableExpr& expr) override;
+  Value* visit(const BinaryExpr& expr) override;
+  Value* visit(const CallExpr& expr) override;
 
-  Function* visit(const FunctionAST& stmt) override;
-  Function* visit(const PrototypeAST& stmt) override;
-  Function* visit(const TopLevelExprAST& stmt) override;
+  Function* visit(const FunctionStmt& stmt) override;
+  Function* visit(const PrototypeStmt& stmt) override;
+  Function* visit(const TopLevelExprStmt& stmt) override;
 
 friend PolyLang;
 };

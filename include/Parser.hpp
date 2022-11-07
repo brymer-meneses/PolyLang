@@ -25,22 +25,22 @@ public:
     m_current = 0;
   };
   
-  std::vector<std::unique_ptr<StmtAST>> parse();
+  std::vector<std::unique_ptr<Stmt>> parse();
 
 private:
-  std::unique_ptr<ExprAST> parseExpression();
-  std::unique_ptr<ExprAST> parsePrimary();
-  std::unique_ptr<ExprAST> parseNumberExpr();
-  std::unique_ptr<ExprAST> parseGroupingExpr();
-  std::unique_ptr<ExprAST> parseBinaryExpr();
-  std::unique_ptr<ExprAST> parseIdentifierExpr();
+  std::unique_ptr<Expr> parseExpression();
+  std::unique_ptr<Expr> parsePrimary();
+  std::unique_ptr<Expr> parseNumberExpr();
+  std::unique_ptr<Expr> parseGroupingExpr();
+  std::unique_ptr<Expr> parseBinaryExpr();
+  std::unique_ptr<Expr> parseIdentifierExpr();
 
-  std::unique_ptr<StmtAST> parseStatement();
-  std::unique_ptr<PrototypeAST> parsePrototype();
-  std::unique_ptr<StmtAST> parseTopLevelExpr();
-  std::unique_ptr<StmtAST> parseFunctionDefinition();
+  std::unique_ptr<Stmt> parseStatement();
+  std::unique_ptr<PrototypeStmt> parsePrototype();
+  std::unique_ptr<Stmt> parseTopLevelExpr();
+  std::unique_ptr<Stmt> parseFunctionDefinition();
 
-  std::unique_ptr<ExprAST> parseBinOpRHS(int exprPrec, std::unique_ptr<ExprAST> LHS);
+  std::unique_ptr<Expr> parseBinOpRHS(int exprPrec, std::unique_ptr<Expr> LHS);
 
   int getTokenPrecedence() {
     switch (peek().m_type) {

@@ -3,27 +3,27 @@
 
 #include <memory>
 
-struct ExprAST;
-struct NumberExprAST;
-struct NumberExprAST;
-struct VariableExprAST;
-struct BinaryExprAST;
-struct CallExprAST;
+struct Expr;
+struct NumberExpr;
+struct NumberExpr;
+struct VariableExpr;
+struct BinaryExpr;
+struct CallExpr;
 
-struct StmtAST;
-struct FunctionAST;
-struct TopLevelExprAST;
-struct PrototypeAST;
+struct Stmt;
+struct FunctionStmt;
+struct TopLevelExprStmt;
+struct PrototypeStmt;
 
 template<typename T>
 class ExprVisitor {
 
 public:
   virtual ~ExprVisitor() {};
-  virtual T visit(const NumberExprAST& expr) = 0;
-  virtual T visit(const VariableExprAST& expr) = 0;
-  virtual T visit(const BinaryExprAST& expr) = 0;
-  virtual T visit(const CallExprAST& expr) = 0;
+  virtual T visit(const NumberExpr& expr) = 0;
+  virtual T visit(const VariableExpr& expr) = 0;
+  virtual T visit(const BinaryExpr& expr) = 0;
+  virtual T visit(const CallExpr& expr) = 0;
 
 };
 
@@ -32,9 +32,9 @@ class StmtVisitor {
 
 public:
   virtual ~StmtVisitor() {};
-  virtual T visit(const FunctionAST& stmt) = 0;
-  virtual T visit(const PrototypeAST& stmt) = 0;
-  virtual T visit(const TopLevelExprAST& stmt) = 0;
+  virtual T visit(const FunctionStmt& stmt) = 0;
+  virtual T visit(const PrototypeStmt& stmt) = 0;
+  virtual T visit(const TopLevelExprStmt& stmt) = 0;
 };
 
 #endif // !EXPR_VISITOR_HPP

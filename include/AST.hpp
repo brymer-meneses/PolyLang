@@ -19,13 +19,15 @@ enum class AstType {
   BinaryExpr,
   CallExpr,
   FunctionStmt,
+  BlockStmt,
+  ReturnStmt,
   PrototypeStmt,
 };
 
 
-struct ExprAST {
-  ExprAST() {};
-  virtual ~ExprAST() {};
+struct Expr {
+  Expr() {};
+  virtual ~Expr() {};
   virtual llvm::Value* accept(Compiler& visitor) const = 0;
 
   template<typename T>
@@ -36,10 +38,10 @@ struct ExprAST {
   virtual AstType type() const = 0;
 };
 
-struct NumberExprAST : public ExprAST {
+struct NumberExpr : public Expr {
   double value;
 
-  NumberExprAST(double value) : value(value) {};
+  NumberExpr(double value) : value(value) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
@@ -50,11 +52,11 @@ struct NumberExprAST : public ExprAST {
   }
 };
 
-struct VariableExprAST : public ExprAST {
+struct VariableExpr : public Expr {
 
   std::string_view name;
 
-  VariableExprAST(std::string_view name) : name(name) {};
+  VariableExpr(std::string_view name) : name(name) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
@@ -66,15 +68,15 @@ struct VariableExprAST : public ExprAST {
 
 };
 
-struct BinaryExprAST : public ExprAST {
+struct BinaryExpr : public Expr {
 private:
-  std::unique_ptr<ExprAST> m_left, m_right;
+  std::unique_ptr<Expr> m_left, m_right;
 public:
 
   TokenType operation;
-  BinaryExprAST(TokenType operation, 
-                std::unique_ptr<ExprAST> left,
-                std::unique_ptr<ExprAST> right)
+  BinaryExpr(TokenType operation, 
+                std::unique_ptr<Expr> left,
+                std::unique_ptr<Expr> right)
       : operation(operation)
       , m_left(std::move(left))
       , m_right(std::move(right)) { };
@@ -97,23 +99,23 @@ public:
     return static_cast<T>(m_right.get());
   };
 
-  const ExprAST* left() const {
+  const Expr* left() const {
     return m_left.get();
   }
 
-  const ExprAST* right() const {
+  const Expr* right() const {
     return m_right.get();
   }
 
 
 };
 
-struct CallExprAST : public ExprAST {
+struct CallExpr : public Expr {
   std::string_view callee;
-  std::vector<std::unique_ptr<ExprAST>> args;
+  std::vector<std::unique_ptr<Expr>> args;
 
-  CallExprAST(std::string_view callee, 
-              std::vector<std::unique_ptr<ExprAST>> args)
+  CallExpr(std::string_view callee, 
+              std::vector<std::unique_ptr<Expr>> args)
       : callee(callee)
       , args(std::move(args)) {};
 
@@ -128,9 +130,9 @@ struct CallExprAST : public ExprAST {
 
 };
 
-struct StmtAST  {
+struct Stmt  {
 
-  virtual ~StmtAST() {};
+  virtual ~Stmt() {};
   virtual llvm::Function* accept(Compiler& visitor) const = 0;
 
   template<typename T>
@@ -141,11 +143,11 @@ struct StmtAST  {
   virtual AstType type() const = 0;
 };
 
-struct PrototypeAST : public StmtAST {
+struct PrototypeStmt : public Stmt {
   std::string_view name;
   std::vector<std::string_view> args;
 
-  PrototypeAST(std::string_view name, std::vector<std::string_view> args)
+  PrototypeStmt(std::string_view name, std::vector<std::string_view> args)
       : name(name)
       , args(args) {};
 
@@ -158,12 +160,12 @@ struct PrototypeAST : public StmtAST {
   }
 };
 
-struct FunctionAST : public StmtAST {
-  std::unique_ptr<ExprAST> body;
-  std::unique_ptr<PrototypeAST>proto;
+struct FunctionStmt : public Stmt {
+  std::unique_ptr<Expr> body;
+  std::unique_ptr<PrototypeStmt>proto;
 
-  FunctionAST(std::unique_ptr<PrototypeAST> proto, 
-              std::unique_ptr<ExprAST> body)
+  FunctionStmt(std::unique_ptr<PrototypeStmt> proto, 
+              std::unique_ptr<Expr> body)
       : proto(std::move(proto))
       , body(std::move(body)) {};
 
@@ -178,13 +180,37 @@ struct FunctionAST : public StmtAST {
 
 };
 
-struct TopLevelExprAST : public StmtAST {
+struct BlockStmt : public Stmt {
 
-  std::unique_ptr<PrototypeAST> proto;
-  std::unique_ptr<ExprAST> body;
+  std::vector<std::unique_ptr<Stmt>> statements;
 
-  TopLevelExprAST(std::unique_ptr<ExprAST> body) 
-    : proto(std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string_view>()))
+  BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
+      : statements(std::move(statements)) {}
+
+  AstType type() const override {
+    return AstType::BlockStmt;
+  }
+};
+
+struct ReturnStmt : public Stmt {
+
+  std::optional<std::unique_ptr<Expr>> expr;
+
+  ReturnStmt(std::optional<std::unique_ptr<Expr>> expr)
+      : expr(std::move(expr)){};
+
+  AstType type() const override {
+    return AstType::BlockStmt;
+  }
+};
+
+struct TopLevelExprStmt : public Stmt {
+
+  std::unique_ptr<PrototypeStmt> proto;
+  std::unique_ptr<Expr> body;
+
+  TopLevelExprStmt(std::unique_ptr<Expr> body) 
+    : proto(std::make_unique<PrototypeStmt>("__anon_expr", std::vector<std::string_view>()))
     , body(std::move(body)) { }
 
   llvm::Function* accept(Compiler& visitor) const override {

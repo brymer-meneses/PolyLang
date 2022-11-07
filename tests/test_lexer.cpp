@@ -77,12 +77,12 @@ TEST(Lexer, String) {
 }
 
 TEST(Lexer, Keywords) {
-  Lexer lexer = Lexer("let and or def if else then end elif");
+  Lexer lexer = Lexer("let and or def if else then end elif return");
   auto tokens = lexer.scanTokens();
 
-  ASSERT_EQ(tokens.size(), 10);
+  ASSERT_EQ(tokens.size(), 11);
 
-  std::array<TokenType, 10> correctTokenTypes = {
+  std::array<TokenType, 11> correctTokenTypes = {
     TokenType::Let,
     TokenType::And,
     TokenType::Or,
@@ -92,6 +92,7 @@ TEST(Lexer, Keywords) {
     TokenType::Then,  
     TokenType::End,
     TokenType::ElseIf,
+    TokenType::Return,
     TokenType::Eof,  
   };
 

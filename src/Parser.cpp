@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-std::unique_ptr<StmtAST> Parser::parseStatement() {
+std::unique_ptr<Stmt> Parser::parseStatement() {
 
   if (match({TokenType::Def}))
     return parseFunctionDefinition();
@@ -16,21 +16,21 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
   return parseTopLevelExpr();
 }
 
-std::unique_ptr<StmtAST> Parser::parseTopLevelExpr() {
+std::unique_ptr<Stmt> Parser::parseTopLevelExpr() {
   if (auto E = parseExpression()) {
-    return std::make_unique<TopLevelExprAST>(std::move(E));
+    return std::make_unique<TopLevelExprStmt>(std::move(E));
   }
   return nullptr;
 }
 
-std::unique_ptr<ExprAST> Parser::parseExpression() {
+std::unique_ptr<Expr> Parser::parseExpression() {
   auto LHS = parsePrimary();
   if (!LHS)
     return nullptr;
   return parseBinOpRHS(0, std::move(LHS));
 };
 
-std::unique_ptr<ExprAST> Parser::parsePrimary() {
+std::unique_ptr<Expr> Parser::parsePrimary() {
 
   if (match({TokenType::Number}))
     return parseNumberExpr();
@@ -46,14 +46,14 @@ std::unique_ptr<ExprAST> Parser::parsePrimary() {
   return nullptr;
 };
 
-std::unique_ptr<ExprAST> Parser::parseNumberExpr() {
+std::unique_ptr<Expr> Parser::parseNumberExpr() {
 
   double value = std::get<0>(previous().m_value.value());
-  return std::make_unique<NumberExprAST>(value);
+  return std::make_unique<NumberExpr>(value);
 }
 
-std::unique_ptr<ExprAST> Parser::parseBinOpRHS(int exprPrec,
-                                               std::unique_ptr<ExprAST> LHS) { 
+std::unique_ptr<Expr> Parser::parseBinOpRHS(int exprPrec,
+                                               std::unique_ptr<Expr> LHS) { 
 
   while (true) {
     int tokPrec = getTokenPrecedence();
@@ -74,11 +74,11 @@ std::unique_ptr<ExprAST> Parser::parseBinOpRHS(int exprPrec,
         return nullptr;
     }
 
-    LHS = std::make_unique<BinaryExprAST>(binOp, std::move(LHS), std::move(RHS));
+    LHS = std::make_unique<BinaryExpr>(binOp, std::move(LHS), std::move(RHS));
   }
 }
 
-std::unique_ptr<ExprAST> Parser::parseGroupingExpr() {
+std::unique_ptr<Expr> Parser::parseGroupingExpr() {
 
   auto expr = parseExpression();
 
@@ -92,7 +92,7 @@ std::unique_ptr<ExprAST> Parser::parseGroupingExpr() {
   return nullptr;
 }
 
-std::unique_ptr<PrototypeAST> Parser::parsePrototype() {
+std::unique_ptr<PrototypeStmt> Parser::parsePrototype() {
   if (!match({TokenType::Identifier})) {
     LogError("Expected function name in prototype.");
     return nullptr;
@@ -125,26 +125,26 @@ std::unique_ptr<PrototypeAST> Parser::parsePrototype() {
     };
   }
 
-  return std::make_unique<PrototypeAST>(fnName, std::move(args));
+  return std::make_unique<PrototypeStmt>(fnName, std::move(args));
 }
 
-std::unique_ptr<StmtAST> Parser::parseFunctionDefinition() {
-  std::unique_ptr<PrototypeAST> proto = parsePrototype();
+std::unique_ptr<Stmt> Parser::parseFunctionDefinition() {
+  std::unique_ptr<PrototypeStmt> proto = parsePrototype();
   if (!proto)
     return nullptr;
   if (auto E = parseExpression()) {
-    return std::make_unique<FunctionAST>(std::move(proto), std::move(E));
+    return std::make_unique<FunctionStmt>(std::move(proto), std::move(E));
   }
   return nullptr;
 }
 
-std::unique_ptr<ExprAST> Parser::parseIdentifierExpr() {
+std::unique_ptr<Expr> Parser::parseIdentifierExpr() {
   std::string_view idName = std::get<1>(previous().m_value.value());
 
   if (!match({TokenType::LeftParen})) // Simple variable ref.
-    return std::make_unique<VariableExprAST>(idName);
+    return std::make_unique<VariableExpr>(idName);
 
-  std::vector<std::unique_ptr<ExprAST>> Args;
+  std::vector<std::unique_ptr<Expr>> Args;
   if (!match({TokenType::RightParen})) {
     while (1) {
 
@@ -165,11 +165,11 @@ std::unique_ptr<ExprAST> Parser::parseIdentifierExpr() {
     }
   }
 
-  return std::make_unique<CallExprAST>(idName, std::move(Args));
+  return std::make_unique<CallExpr>(idName, std::move(Args));
 }
 
-std::vector<std::unique_ptr<StmtAST>> Parser::parse() {
-  std::vector<std::unique_ptr<StmtAST>> statements = {};
+std::vector<std::unique_ptr<Stmt>> Parser::parse() {
+  std::vector<std::unique_ptr<Stmt>> statements = {};
   while (!isFinished()) {
     auto statement =  parseStatement();
     if (statement)

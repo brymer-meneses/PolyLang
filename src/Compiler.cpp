@@ -9,19 +9,19 @@
 
 using namespace llvm;
 
-Value* Compiler::codegen(const ExprAST* const expr) {
+Value* Compiler::codegen(const Expr* const expr) {
   return expr->accept(*this);
 };
 
-Function* Compiler::codegen(const StmtAST* const stmt) {
+Function* Compiler::codegen(const Stmt* const stmt) {
   return stmt->accept(*this);
 };
 
-Value* Compiler::visit(const NumberExprAST& expr) {
+Value* Compiler::visit(const NumberExpr& expr) {
   return ConstantFP::get(*m_context, llvm::APFloat(expr.value));
 }
 
-Value* Compiler::visit(const VariableExprAST& expr) {
+Value* Compiler::visit(const VariableExpr& expr) {
 
   Value* v = m_namedValues[expr.name];
 
@@ -31,7 +31,7 @@ Value* Compiler::visit(const VariableExprAST& expr) {
   return v;
 }
 
-Value* Compiler::visit(const BinaryExprAST& expr) {
+Value* Compiler::visit(const BinaryExpr& expr) {
   Value *L = codegen(expr.left());
   Value *R = codegen(expr.right());
 
@@ -71,7 +71,7 @@ Value* Compiler::visit(const BinaryExprAST& expr) {
 
 }
 
-Value* Compiler::visit(const CallExprAST& expr) {
+Value* Compiler::visit(const CallExpr& expr) {
 
   Function* CalleeF = m_module->getFunction(expr.callee);
 
@@ -103,7 +103,7 @@ Value* Compiler::visit(const CallExprAST& expr) {
 
 }
 
-Function* Compiler::visit(const PrototypeAST& stmt) {
+Function* Compiler::visit(const PrototypeStmt& stmt) {
 
   auto Args = stmt.args;
 
@@ -119,7 +119,7 @@ Function* Compiler::visit(const PrototypeAST& stmt) {
 }
 
 
-Function* Compiler::visit(const FunctionAST& stmt) {
+Function* Compiler::visit(const FunctionStmt& stmt) {
 
   auto Proto = stmt.proto.get();
   auto Body = stmt.body.get();
@@ -156,7 +156,7 @@ Function* Compiler::visit(const FunctionAST& stmt) {
   return nullptr;
 }
 
-Function* Compiler::visit(const TopLevelExprAST& stmt) {
+Function* Compiler::visit(const TopLevelExprStmt& stmt) {
 
   auto Proto = stmt.proto.get();
   auto Body = stmt.body.get();

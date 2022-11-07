@@ -40,6 +40,7 @@ enum class TokenType {
   Def,
   Identifier,
   Extern,
+  Return,
 
   // type tokens
   Number,
@@ -47,7 +48,7 @@ enum class TokenType {
 
 };
 
-inline std::string_view TokenTypeToString(TokenType type) {
+constexpr std::string_view TokenTypeToString(TokenType type) {
 
   switch (type) {
     case TokenType::Eof:
@@ -108,6 +109,8 @@ inline std::string_view TokenTypeToString(TokenType type) {
       return "number";
     case TokenType::String:
       return "string";
+    case TokenType::Return:
+      return "return";
   }
 }
 

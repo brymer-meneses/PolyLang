@@ -21,6 +21,7 @@ const static std::map<std::string_view, TokenType> KEYWORDS = {
   { "let"    ,  TokenType::Let    },
   { "end"    ,  TokenType::End    },
   { "extern" ,  TokenType::Extern },
+  { "return" ,  TokenType::Return },
 };
 
 std::vector<Token> Lexer::scanTokens() {
@@ -137,6 +138,7 @@ Token Lexer::scanIdentifier() {
     advance();
 
   std::string_view keyword = m_source.substr(m_start, m_current-m_start);
+  // TODO: support else if, not elif by looking ahead
 
   TokenType type;
   try {
