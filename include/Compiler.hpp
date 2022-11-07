@@ -18,6 +18,9 @@ class PolyLang;
 
 class Compiler : public ExprVisitor<llvm::Value*>, public StmtVisitor<llvm::Function*> {
 
+  using Value = llvm::Value;
+  using Function = llvm::Function;
+
 private:
   std::unique_ptr<llvm::LLVMContext> m_context;
   std::unique_ptr<llvm::IRBuilder<>> m_builder;
@@ -37,17 +40,17 @@ public:
 
   };
 
-  llvm::Value* codegen(const ExprAST* const expr);
-  llvm::Function* codegen(const StmtAST* const stmt);
+  Value* codegen(const ExprAST* const expr);
+  Function* codegen(const StmtAST* const stmt);
 
-  llvm::Value* visit(const NumberExprAST& expr) override;
-  llvm::Value* visit(const VariableExprAST& expr) override;
-  llvm::Value* visit(const BinaryExprAST& expr) override;
-  llvm::Value* visit(const CallExprAST& expr) override;
+  Value* visit(const NumberExprAST& expr) override;
+  Value* visit(const VariableExprAST& expr) override;
+  Value* visit(const BinaryExprAST& expr) override;
+  Value* visit(const CallExprAST& expr) override;
 
-  llvm::Function* visit(const FunctionAST& stmt) override;
-  llvm::Function* visit(const PrototypeAST& stmt) override;
-  llvm::Function* visit(const TopLevelExprAST& stmt) override;
+  Function* visit(const FunctionAST& stmt) override;
+  Function* visit(const PrototypeAST& stmt) override;
+  Function* visit(const TopLevelExprAST& stmt) override;
 
 friend PolyLang;
 };

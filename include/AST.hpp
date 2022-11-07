@@ -3,242 +3,176 @@
 
 #include "Token.hpp"
 #include "Compiler.hpp"
+#include "Visitor.hpp"
+
+#include <llvm/IR/Value.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <llvm/IR/Value.h>
 
-enum class ASTType {
+enum class AstType {
+  TopLevelExprStmt,
   NumberExpr,
   VariableExpr,
   BinaryExpr,
   CallExpr,
-  TopLevelExprStmt,
   FunctionStmt,
   PrototypeStmt,
 };
 
-class ASTNode {
-  const ASTType m_type;
 
-public:
-  ASTNode(ASTType type) : m_type(type) {};
+struct ExprAST {
+  ExprAST() {};
+  virtual ~ExprAST() {};
+  virtual llvm::Value* accept(Compiler& visitor) const = 0;
+
   template<typename T>
   T as() {
     return static_cast<T>(this);
   };
 
-  virtual const ASTType type() const {
-    return m_type;
+  virtual AstType type() const = 0;
+};
+
+struct NumberExprAST : public ExprAST {
+  double value;
+
+  NumberExprAST(double value) : value(value) {};
+
+  llvm::Value* accept(Compiler& visitor) const override {
+    return visitor.visit(*this);
   };
 
-  virtual const std::string typeToString() const {
-    switch (m_type) {
-      case ASTType::NumberExpr:
-        return "Number Expression";
-      case ASTType::VariableExpr:
-        return "Variable Expression";
-      case ASTType::BinaryExpr:
-        return "Binary Expression";
-      case ASTType::CallExpr:
-        return "Call Expression";
-      case ASTType::TopLevelExprStmt:
-        return "Top Level Expression";
-      case ASTType::FunctionStmt:
-        return "Function Statement";
-      case ASTType::PrototypeStmt:
-        return "Prototype Statement";
-    };
-  }
-
-};
-
-class ExprAST : public ASTNode {
-public:
-  ExprAST(ASTType type) : ASTNode(type) {};
-  virtual ~ExprAST() {};
-  virtual llvm::Value* accept(Compiler& visitor) const = 0;
-};
-
-class NumberExprAST : public ExprAST {
-  double m_value;
-public:
-  NumberExprAST(double value) : m_value(value), ExprAST(ASTType::NumberExpr) {};
-  double value() const {
-    return m_value;
-  }
-
-  llvm::Value* accept(Compiler& visitor) const override {
-    return visitor.visit(*this);
+  AstType type() const override {
+    return AstType::NumberExpr;
   }
 };
 
-class VariableExprAST : public ExprAST {
-  std::string_view m_name;
-public:
-  VariableExprAST(std::string_view name) : m_name(name), ExprAST(ASTType::VariableExpr) {};
+struct VariableExprAST : public ExprAST {
+
+  std::string_view name;
+
+  VariableExprAST(std::string_view name) : name(name) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
   }
 
-  std::string_view name() const {
-    return m_name;
+  AstType type() const override {
+    return AstType::VariableExpr;
   }
+
 };
 
-class BinaryExprAST : public ExprAST {
-  TokenType m_operation;
-  std::unique_ptr<ExprAST> m_LHS, m_RHS;
-public:
+struct BinaryExprAST : public ExprAST {
+  TokenType operation;
+  std::unique_ptr<ExprAST> LHS, RHS;
+
   BinaryExprAST(TokenType operation, 
                 std::unique_ptr<ExprAST> LHS,
                 std::unique_ptr<ExprAST> RHS)
-      : m_operation(operation)
-      , m_LHS(std::move(LHS))
-      , m_RHS(std::move(RHS))
-      , ExprAST(ASTType::BinaryExpr) { };
-
-  template<typename T>
-  T left() const {
-    return static_cast<T>(m_LHS.get());
-  }
-
-  template<typename T>
-  T right() const {
-    return static_cast<T>(m_RHS.get());
-  }
-
-  const ExprAST* left() const {
-    return m_LHS.get();
-  }
-
-  const ExprAST* right() const {
-    return m_RHS.get();
-  }
-
-  const TokenType binOp() const {
-    return m_operation;
-  }
+      : operation(operation)
+      , LHS(std::move(LHS))
+      , RHS(std::move(RHS)) { };
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
   }
+
+  AstType type() const override {
+    return AstType::BinaryExpr;
+  }
 };
 
-class CallExprAST : public ExprAST {
-  std::string_view m_callee;
-  std::vector<std::unique_ptr<ExprAST>> m_args;
-public:
+struct CallExprAST : public ExprAST {
+  std::string_view callee;
+  std::vector<std::unique_ptr<ExprAST>> args;
+
   CallExprAST(std::string_view callee, 
               std::vector<std::unique_ptr<ExprAST>> args)
-      : m_callee(callee)
-      , m_args(std::move(args))
-      , ExprAST(ASTType::CallExpr) {};
+      : callee(callee)
+      , args(std::move(args)) {};
 
   llvm::Value* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
+  }
+
+  AstType type() const override {
+    return AstType::CallExpr;
+  }
+
+
+};
+
+struct StmtAST  {
+
+  virtual ~StmtAST() {};
+  virtual llvm::Function* accept(Compiler& visitor) const = 0;
+
+  template<typename T>
+  T as() {
+    return static_cast<T>(this);
   };
 
-  const std::string_view callee() const {
-    return m_callee;
-  }
-
-  const std::vector<std::unique_ptr<ExprAST>>& args() const {
-    return m_args;
-  }
+  virtual AstType type() const = 0;
 };
 
-class StmtAST : public ASTNode {
-public:
-  virtual ~StmtAST() {};
-  StmtAST(ASTType type) : ASTNode(type) {};
-  virtual llvm::Function* accept(Compiler& visitor) const = 0;
-};
+struct PrototypeAST : public StmtAST {
+  std::string_view name;
+  std::vector<std::string_view> args;
 
-class PrototypeAST : public StmtAST {
-  std::string_view m_name;
-  std::vector<std::string_view> m_args;
-public:
   PrototypeAST(std::string_view name, std::vector<std::string_view> args)
-      : m_name(name)
-      , m_args(args)
-      , StmtAST(ASTType::PrototypeStmt) {};
+      : name(name)
+      , args(args) {};
 
   llvm::Function* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
   };
 
-  const std::vector<std::string_view>& args() const {
-    return m_args;
+  AstType type() const override {
+    return AstType::PrototypeStmt;
   }
-
-  std::string_view name() const {
-    return m_name;
-  }
-  
 };
 
-class FunctionAST : public StmtAST {
-private:
-  std::unique_ptr<PrototypeAST> m_proto;
-  std::unique_ptr<ExprAST> m_body;
-public:
+struct FunctionAST : public StmtAST {
+
+  std::unique_ptr<PrototypeAST>proto;
+  std::unique_ptr<ExprAST> body;
+
   FunctionAST(std::unique_ptr<PrototypeAST> proto, 
               std::unique_ptr<ExprAST> body)
-      : m_proto(std::move(proto))
-      , m_body(std::move(body))
-      , StmtAST(ASTType::FunctionStmt) {};
+      : proto(std::move(proto))
+      , body(std::move(body)) {};
 
 
   llvm::Function* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
   };
 
-  template<typename T>
-  T body() {
-    return static_cast<T>(m_body.get());
-  };
+  AstType type() const override {
+    return AstType::FunctionStmt;
+  }
 
-  const PrototypeAST* const proto() const {
-    return m_proto.get();
-  };
-
-  const ExprAST* const body() const {
-    return m_body.get();
-  };
 };
 
-class TopLevelExprAST : public StmtAST {
-private:
-  std::unique_ptr<PrototypeAST> m_proto;
-  std::unique_ptr<ExprAST> m_body;
+struct TopLevelExprAST : public StmtAST {
 
-public:
-  TopLevelExprAST(std::unique_ptr<ExprAST> body)
-      : StmtAST(ASTType::TopLevelExprStmt) { 
-        m_proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string_view>());
-        m_body = std::move(body);
-      };
+  std::unique_ptr<PrototypeAST> proto;
+  std::unique_ptr<ExprAST> body;
+
+  TopLevelExprAST(std::unique_ptr<ExprAST> body) 
+    : proto(std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string_view>()))
+    , body(std::move(body)) { }
 
   llvm::Function* accept(Compiler& visitor) const override {
     return visitor.visit(*this);
-  };
+  }
 
-  template<typename T>
-  T body() {
-    return static_cast<T>(m_body.get());
-  };
-
-  const PrototypeAST* const proto() const {
-    return m_proto.get();
-  };
-
-  const ExprAST* const body() const {
-    return m_body.get();
-  };
+  AstType type() const override {
+    return AstType::TopLevelExprStmt;
+  }
 
 };
 

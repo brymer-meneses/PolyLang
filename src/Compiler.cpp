@@ -18,12 +18,12 @@ Function* Compiler::codegen(const StmtAST* const stmt) {
 };
 
 Value* Compiler::visit(const NumberExprAST& expr) {
-  return ConstantFP::get(*m_context, llvm::APFloat(expr.value()));
+  return ConstantFP::get(*m_context, llvm::APFloat(expr.value));
 }
 
 Value* Compiler::visit(const VariableExprAST& expr) {
 
-  Value* v = m_namedValues[expr.name()];
+  Value* v = m_namedValues[expr.name];
 
   if (!v)
     LogError("Unknown variable name.");
@@ -32,13 +32,13 @@ Value* Compiler::visit(const VariableExprAST& expr) {
 }
 
 Value* Compiler::visit(const BinaryExprAST& expr) {
-  Value *L = codegen(expr.left());
-  Value *R = codegen(expr.right());
+  Value *L = codegen(expr.LHS.get());
+  Value *R = codegen(expr.RHS.get());
 
   if (!L || !R)
     return nullptr;
 
-  switch (expr.binOp()) {
+  switch (expr.operation) {
     case TokenType::Plus:
       return m_builder->CreateFAdd(L, R, "addtmp");
     case TokenType::Minus:
@@ -70,9 +70,9 @@ Value* Compiler::visit(const BinaryExprAST& expr) {
 
 Value* Compiler::visit(const CallExprAST& expr) {
 
-  Function* CalleeF = m_module->getFunction(expr.callee());
+  Function* CalleeF = m_module->getFunction(expr.callee);
 
-  std::size_t args_size = expr.args().size();
+  std::size_t args_size = expr.args.size();
 
   if (!CalleeF) {
     LogError("Unknown function referenced");
@@ -88,7 +88,7 @@ Value* Compiler::visit(const CallExprAST& expr) {
 
   for (unsigned i=0; i != args_size; ++i) {
     // compile
-    argsV.push_back( codegen( expr.args()[i].get() ) );
+    argsV.push_back( codegen( expr.args[i].get() ) );
 
     // if the last arg is a nullptr
     if (!argsV.back())
@@ -102,11 +102,11 @@ Value* Compiler::visit(const CallExprAST& expr) {
 
 Function* Compiler::visit(const PrototypeAST& stmt) {
 
-  auto Args = stmt.args();
+  auto Args = stmt.args;
 
   std::vector<llvm::Type *> Doubles(Args.size(), Type::getDoubleTy(*m_context));
   FunctionType *FT = FunctionType::get(Type::getDoubleTy(*m_context), Doubles, false);
-  Function* F = Function::Create(FT, Function::ExternalLinkage, stmt.name(), m_module.get());
+  Function* F = Function::Create(FT, Function::ExternalLinkage, stmt.name, m_module.get());
 
   unsigned Idx = 0;
   for (auto& Arg : F->args())
@@ -118,10 +118,10 @@ Function* Compiler::visit(const PrototypeAST& stmt) {
 
 Function* Compiler::visit(const FunctionAST& stmt) {
 
-  auto Proto = stmt.proto();
-  auto Body = stmt.body();
+  auto Proto = stmt.proto.get();
+  auto Body = stmt.body.get();
 
-  Function* TheFunction = m_module->getFunction(Proto->name());
+  Function* TheFunction = m_module->getFunction(Proto->name);
 
   if (!TheFunction)
     TheFunction = codegen(Proto);
@@ -155,10 +155,10 @@ Function* Compiler::visit(const FunctionAST& stmt) {
 
 Function* Compiler::visit(const TopLevelExprAST& stmt) {
 
-  auto Proto = stmt.proto();
-  auto Body = stmt.body();
+  auto Proto = stmt.proto.get();
+  auto Body = stmt.body.get();
 
-  Function* TheFunction = m_module->getFunction(Proto->name());
+  Function* TheFunction = m_module->getFunction(Proto->name);
 
   if (!TheFunction)
     TheFunction = codegen(Proto);

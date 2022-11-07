@@ -39,7 +39,12 @@ void PolyLang::execute(std::string_view source) {
   auto statements = parser.parse();
 
   for (int i=0; i<statements.size(); i++) {
-    auto* IR = statements[i].get()->accept(m_compiler);
+    if (!statements[i]) {
+      LogError("Parsing Error.");
+      break;
+    }
+
+    auto* IR = m_compiler.codegen(statements[i].get());
 
     if (!IR) {
       LogError("Compilation Error.");
@@ -47,7 +52,7 @@ void PolyLang::execute(std::string_view source) {
     }
     IR->print(llvm::errs());
 
-    if (statements[i]->type() == ASTType::TopLevelExprStmt)
+    if (statements[i]->type() == AstType::TopLevelExprStmt)
       IR->eraseFromParent();
   }
 }

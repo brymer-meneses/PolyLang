@@ -3,16 +3,17 @@
 
 #include <memory>
 
-class ExprAST;
-class NumberExprAST;
-class VariableExprAST;
-class BinaryExprAST;
-class CallExprAST;
-class StmtAST;
+struct ExprAST;
+struct NumberExprAST;
+struct NumberExprAST;
+struct VariableExprAST;
+struct BinaryExprAST;
+struct CallExprAST;
 
-class FunctionAST;
-class TopLevelExprAST;
-class PrototypeAST;
+struct StmtAST;
+struct FunctionAST;
+struct TopLevelExprAST;
+struct PrototypeAST;
 
 template<typename T>
 class ExprVisitor {
