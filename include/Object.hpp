@@ -4,6 +4,6 @@
 #include <string>
 #include <variant>
 
-typedef std::variant<double, std::string_view> Object;
+using Object = std::variant<double, std::string_view>;
 
 #endif // !OBJECT_HPP

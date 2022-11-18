@@ -17,11 +17,8 @@ private:
   std::string_view m_source;
 
 public:
-  Lexer(std::string_view source) 
-    : m_source(source),
-      m_current(0),
-      m_start(0),
-      m_line(1) {}
+  Lexer(std::string_view source)
+      : m_source(source), m_current(0), m_start(0), m_line(1) {}
 
   std::vector<Token> scanTokens();
 
@@ -32,11 +29,9 @@ private:
   Token scanNumber();
 
   // Helper Methods are defined here
-  bool isFinished() {
-    return m_current >= m_source.length();
-  }
+  bool isFinished() { return m_current >= m_source.length(); }
 
-  LineLoc computeLineLocation() { 
+  LineLoc computeLineLocation() {
     return LineLoc(m_start, m_current - 1, m_line);
   }
 
@@ -49,7 +44,7 @@ private:
   }
 
   bool match(const char c) {
-    if (peek() == c)  {
+    if (peek() == c) {
       m_current += 1;
       return true;
     }
@@ -68,9 +63,6 @@ private:
       return '\0';
     return m_source[m_current + 1];
   }
-
-
 };
-
 
 #endif // !LEXER_HPP

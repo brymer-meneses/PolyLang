@@ -1,24 +1,24 @@
+#include "Parser.hpp"
 #include "AST.hpp"
 #include "Logger.hpp"
-#include "Parser.hpp"
 #include "Token.hpp"
 
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <utility>
 #include <vector>
 
 std::unique_ptr<Stmt> Parser::parseStatement() {
 
-  if (match({TokenType::Def}))
+  if (match(TokenType::Def))
     return parseFunctionDefinition();
 
-  return parseTopLevelExpr();
+  return parseExpressionStmt();
 }
 
-std::unique_ptr<Stmt> Parser::parseTopLevelExpr() {
+std::unique_ptr<Stmt> Parser::parseExpressionStmt() {
   if (auto E = parseExpression()) {
-    return std::make_unique<TopLevelExprStmt>(std::move(E));
+    return std::make_unique<ExpressionStmt>(std::move(E));
   }
   return nullptr;
 }
@@ -32,13 +32,13 @@ std::unique_ptr<Expr> Parser::parseExpression() {
 
 std::unique_ptr<Expr> Parser::parsePrimary() {
 
-  if (match({TokenType::Number}))
+  if (match(TokenType::Number))
     return parseNumberExpr();
-  
-  if (match({TokenType::Identifier}))
+
+  if (match(TokenType::Identifier))
     return parseIdentifierExpr();
 
-  if (match({TokenType::LeftParen}))
+  if (match(TokenType::LeftParen))
     return parseGroupingExpr();
 
   std::cout << TokenTypeToString(peek().m_type) << std::endl;
@@ -53,7 +53,7 @@ std::unique_ptr<Expr> Parser::parseNumberExpr() {
 }
 
 std::unique_ptr<Expr> Parser::parseBinOpRHS(int exprPrec,
-                                               std::unique_ptr<Expr> LHS) { 
+                                            std::unique_ptr<Expr> LHS) {
 
   while (true) {
     int tokPrec = getTokenPrecedence();
@@ -69,7 +69,7 @@ std::unique_ptr<Expr> Parser::parseBinOpRHS(int exprPrec,
 
     int nextPrec = getTokenPrecedence();
     if (tokPrec < nextPrec) {
-      RHS = parseBinOpRHS(tokPrec+1, std::move(RHS));
+      RHS = parseBinOpRHS(tokPrec + 1, std::move(RHS));
       if (!RHS)
         return nullptr;
     }
@@ -85,7 +85,7 @@ std::unique_ptr<Expr> Parser::parseGroupingExpr() {
   if (!expr)
     return nullptr;
 
-  if (match({TokenType::RightParen})) {
+  if (match(TokenType::RightParen)) {
     return std::move(expr);
   };
 
@@ -93,7 +93,7 @@ std::unique_ptr<Expr> Parser::parseGroupingExpr() {
 }
 
 std::unique_ptr<PrototypeStmt> Parser::parsePrototype() {
-  if (!match({TokenType::Identifier})) {
+  if (!match(TokenType::Identifier)) {
     LogError("Expected function name in prototype.");
     return nullptr;
   }
@@ -101,24 +101,24 @@ std::unique_ptr<PrototypeStmt> Parser::parsePrototype() {
   assert(previous().m_value.has_value());
   std::string_view fnName = std::get<1>(previous().m_value.value());
 
-  if (!match({TokenType::LeftParen})) {
+  if (!match(TokenType::LeftParen)) {
     LogError("Expected '(' in prototype");
     return nullptr;
   }
 
   std::vector<std::string_view> args;
 
-  if (!match({TokenType::RightParen})) {
-    while(true) {
-      if (match({TokenType::Identifier})) {
+  if (!match(TokenType::RightParen)) {
+    while (true) {
+      if (match(TokenType::Identifier)) {
         std::string_view arg = std::get<1>(previous().m_value.value());
         args.push_back(std::move(arg));
       }
 
-      if (match({TokenType::RightParen}))
+      if (match(TokenType::RightParen))
         break;
 
-      if (!match({TokenType::Comma})) {
+      if (!match(TokenType::Comma)) {
         LogError("Expected ',' in prototype");
         return nullptr;
       };
@@ -132,20 +132,54 @@ std::unique_ptr<Stmt> Parser::parseFunctionDefinition() {
   std::unique_ptr<PrototypeStmt> proto = parsePrototype();
   if (!proto)
     return nullptr;
-  if (auto E = parseExpression()) {
+  if (auto E = parseBlock()) {
     return std::make_unique<FunctionStmt>(std::move(proto), std::move(E));
   }
   return nullptr;
 }
 
+std::unique_ptr<BlockStmt> Parser::parseBlock() {
+
+  std::vector<std::unique_ptr<Stmt>> statements = {};
+  std::unique_ptr<ReturnStmt> returnStmt;
+
+  while (!check(TokenType::Return) && !isFinished()) {
+    statements.emplace_back(parseExpressionStmt());
+  };
+
+  if (isFinished()) {
+    LogError("Unexpected end");
+    return nullptr;
+  }
+
+  if (match(TokenType::Return)) {
+    returnStmt = parseReturn();
+  }
+
+  return std::make_unique<BlockStmt>(std::move(statements),
+                                     std::move(returnStmt));
+}
+
+std::unique_ptr<ReturnStmt> Parser::parseReturn() {
+  auto returnValue = parseExpression();
+  auto returnStmt = std::make_unique<ReturnStmt>(std::move(returnValue));
+
+  if (!match(TokenType::End)) {
+    LogError("Expected `end` token");
+    return nullptr;
+  }
+
+  return returnStmt;
+}
+
 std::unique_ptr<Expr> Parser::parseIdentifierExpr() {
   std::string_view idName = std::get<1>(previous().m_value.value());
 
-  if (!match({TokenType::LeftParen})) // Simple variable ref.
+  if (!match(TokenType::LeftParen)) // Simple variable ref.
     return std::make_unique<VariableExpr>(idName);
 
   std::vector<std::unique_ptr<Expr>> Args;
-  if (!match({TokenType::RightParen})) {
+  if (!match(TokenType::RightParen)) {
     while (1) {
 
       if (auto Arg = parseExpression())
@@ -153,15 +187,14 @@ std::unique_ptr<Expr> Parser::parseIdentifierExpr() {
       else
         return nullptr;
 
-      if (match({TokenType::RightParen}))
+      if (match(TokenType::RightParen))
         break;
 
-      if (!match({TokenType::Comma})) {
+      if (!match(TokenType::Comma)) {
         std::cout << TokenTypeToString(peek().m_type);
         LogError("Expected ',' in argument list");
         return nullptr;
       };
-
     }
   }
 
@@ -171,7 +204,7 @@ std::unique_ptr<Expr> Parser::parseIdentifierExpr() {
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
   std::vector<std::unique_ptr<Stmt>> statements = {};
   while (!isFinished()) {
-    auto statement =  parseStatement();
+    auto statement = parseStatement();
     if (statement)
       statements.push_back(std::move(statement));
     else

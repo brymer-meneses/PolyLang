@@ -12,10 +12,8 @@ struct LineLoc {
   // line number
   std::size_t line;
 
-  LineLoc(std::size_t start, std::size_t end, std::size_t line) 
-    : start(start)
-    , end(end)
-    , line(line) { }
+  LineLoc(std::size_t start, std::size_t end, std::size_t line)
+      : start(start), end(end), line(line) {}
 };
 
 typedef std::vector<LineLoc> FileLoc;

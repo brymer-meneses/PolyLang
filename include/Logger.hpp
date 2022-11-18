@@ -3,7 +3,7 @@
 
 #include <cstdio>
 
-inline void LogError(const char* string) {
+inline void LogError(const char *string) {
 
   std::fprintf(stderr, "Logger: %s\n", string);
 }

@@ -4,8 +4,8 @@
 
 #include "Compiler.hpp"
 #include "Logger.hpp"
-#include "PolyLang.hpp"
 #include "Parser.hpp"
+#include "PolyLang.hpp"
 
 void PolyLang::run() {
   if (m_argc == 1) {
@@ -23,7 +23,7 @@ void PolyLang::runPrompt() {
 
   std::string inputLine;
 
-  while(true) {
+  while (true) {
     std::cout << ">>> ";
     std::getline(std::cin, inputLine);
     if (inputLine.empty())
@@ -38,13 +38,13 @@ void PolyLang::execute(std::string_view source) {
   Parser parser = Parser(source);
   auto statements = parser.parse();
 
-  for (int i=0; i<statements.size(); i++) {
+  for (int i = 0; i < statements.size(); i++) {
     if (!statements[i]) {
       LogError("Parsing Error.");
       break;
     }
 
-    auto* IR = m_compiler.codegen(statements[i].get());
+    auto *IR = m_compiler.codegen(statements[i].get());
 
     if (!IR) {
       LogError("Compilation Error.");
@@ -52,7 +52,7 @@ void PolyLang::execute(std::string_view source) {
     }
     IR->print(llvm::errs());
 
-    if (statements[i]->type() == AstType::TopLevelExprStmt)
-      IR->eraseFromParent();
+    if (statements[i]->type() == AstType::ExpressionStmt)
+      static_cast<llvm::Function *>(IR)->eraseFromParent();
   }
 }
