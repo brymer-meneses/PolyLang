@@ -15,6 +15,7 @@ enum class AstType {
   ExpressionStmt,
   NumberExpr,
   VariableExpr,
+  IfStmt,
   BinaryExpr,
   CallExpr,
   FunctionStmt,
@@ -182,6 +183,25 @@ struct ExpressionStmt : public Stmt {
   }
 
   AstType type() const override { return AstType::ExpressionStmt; }
+};
+
+struct IfStmt : public Stmt {
+
+  std::unique_ptr<Expr> condition;
+  std::unique_ptr<BlockStmt> thenBlock;
+  std::unique_ptr<BlockStmt> elseBlock;
+  std::unique_ptr<Stmt> elseIf;
+
+  llvm::Value *accept(Compiler &visitor) const override {
+    return visitor.visit(*this);
+  }
+
+  AstType type() const override { return AstType::IfStmt; }
+
+  IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<BlockStmt> thenBlock,
+         std::unique_ptr<Stmt> elseIf, std::unique_ptr<BlockStmt> elseBlock)
+      : condition(std::move(condition)), thenBlock(std::move(thenBlock)),
+        elseIf(std::move(elseIf)), elseBlock(std::move(elseBlock)){};
 };
 
 #endif // !AST_HPP

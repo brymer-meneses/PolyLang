@@ -12,6 +12,8 @@ std::unique_ptr<Stmt> Parser::parseStatement() {
 
   if (match(TokenType::Def))
     return parseFunctionDefinition();
+  if (match(TokenType::If))
+    return parseIfStmt();
 
   return parseExpressionStmt();
 }
@@ -130,12 +132,23 @@ std::unique_ptr<PrototypeStmt> Parser::parsePrototype() {
 
 std::unique_ptr<Stmt> Parser::parseFunctionDefinition() {
   std::unique_ptr<PrototypeStmt> proto = parsePrototype();
+
   if (!proto)
     return nullptr;
-  if (auto E = parseBlock()) {
-    return std::make_unique<FunctionStmt>(std::move(proto), std::move(E));
+
+  std::unique_ptr<BlockStmt> body = parseBlock();
+
+  if (!body) {
+    LogError("Expected function definition");
+    return nullptr;
   }
-  return nullptr;
+
+  if (!match(TokenType::End)) {
+    LogError("Expected `end` token");
+    return nullptr;
+  }
+
+  return std::make_unique<FunctionStmt>(std::move(proto), std::move(body));
 }
 
 std::unique_ptr<BlockStmt> Parser::parseBlock() {
@@ -163,11 +176,6 @@ std::unique_ptr<BlockStmt> Parser::parseBlock() {
 std::unique_ptr<ReturnStmt> Parser::parseReturn() {
   auto returnValue = parseExpression();
   auto returnStmt = std::make_unique<ReturnStmt>(std::move(returnValue));
-
-  if (!match(TokenType::End)) {
-    LogError("Expected `end` token");
-    return nullptr;
-  }
 
   return returnStmt;
 }
@@ -199,6 +207,56 @@ std::unique_ptr<Expr> Parser::parseIdentifierExpr() {
   }
 
   return std::make_unique<CallExpr>(idName, std::move(Args));
+}
+
+std::unique_ptr<Stmt> Parser::parseIfStmt() {
+  std::unique_ptr<Expr> condition = parseExpression();
+  std::unique_ptr<Stmt> elseIf(nullptr);
+  std::unique_ptr<BlockStmt> elseBlock(nullptr);
+
+  if (!condition) {
+    LogError("Expected condition");
+    return nullptr;
+  }
+
+  if (!match(TokenType::Then)) {
+    LogError("Expected `then` after condition");
+    return nullptr;
+  }
+
+  std::unique_ptr<BlockStmt> thenBlock = parseBlock();
+
+  // if condition then
+  //  ...
+  // end;
+  if (match(TokenType::End))
+    return std::make_unique<IfStmt>(std::move(condition), std::move(thenBlock),
+                                    nullptr, nullptr);
+
+  // if condition then
+  //  ...
+  // else if condition  then
+  //  ...
+  // end;
+  if (match(TokenType::ElseIf)) {
+    // recurse
+    elseIf = parseIfStmt();
+    // elseIf now holds the else block so we need not to worry
+    return std::make_unique<IfStmt>(std::move(condition), std::move(thenBlock),
+                                    std::move(elseIf), nullptr);
+  }
+
+  if (match(TokenType::Else)) {
+    elseBlock = parseBlock();
+  }
+
+  if (!match(TokenType::End)) {
+    LogError("Expected `end` after else block");
+    return nullptr;
+  }
+
+  return std::make_unique<IfStmt>(std::move(condition), std::move(thenBlock),
+                                  std::move(elseIf), std::move(elseBlock));
 }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {

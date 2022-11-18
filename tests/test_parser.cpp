@@ -147,3 +147,34 @@ TEST(Parser, FunctionDefinition) {
   EXPECT_EQ(returnValue->operation, TokenType::Plus);
   EXPECT_EQ(returnValue->right<VariableExpr *>()->name, "y");
 }
+
+TEST(Parser, SimpleIf) {
+  Parser parser = Parser("if 10 == 2*10 then return 0 end");
+  auto statements = parser.parse();
+
+  ASSERT_EQ(statements.size(), 1);
+  ASSERT_EQ(statements[0]->type(), AstType::IfStmt);
+
+  auto &condition = statements[0]->as<IfStmt *>()->condition;
+  auto &thenBlock = statements[0]->as<IfStmt *>()->thenBlock;
+
+  auto expr = condition->as<BinaryExpr *>();
+
+  ASSERT_EQ(condition->type(), AstType::BinaryExpr);
+
+  EXPECT_EQ(expr->left<NumberExpr *>()->value, 10);
+  EXPECT_EQ(expr->operation, TokenType::EqualEqual);
+
+  auto _2_times_10 = expr->right<BinaryExpr *>();
+
+  EXPECT_EQ(_2_times_10->left<NumberExpr *>()->value, 2);
+  EXPECT_EQ(_2_times_10->operation, TokenType::Star);
+  EXPECT_EQ(_2_times_10->right<NumberExpr *>()->value, 10);
+
+  EXPECT_EQ(thenBlock->statements.size(), 0);
+  EXPECT_TRUE(thenBlock->returnStmt);
+
+  auto returnValue = thenBlock->returnStmt->returnValue->as<NumberExpr *>();
+
+  EXPECT_EQ(returnValue->value, 0);
+}

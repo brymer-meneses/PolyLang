@@ -207,3 +207,5 @@ Value *Compiler::visit(const ExpressionStmt &stmt) {
   TheFunction->eraseFromParent();
   return nullptr;
 }
+
+Function *Compiler::visit(const IfStmt &stmt) {}

@@ -46,6 +46,7 @@ public:
   Value *visit(const CallExpr &expr) override;
 
   Function *visit(const FunctionStmt &stmt) override;
+  Function *visit(const IfStmt &stmt) override;
   Function *visit(const PrototypeStmt &stmt) override;
   Function *visit(const BlockStmt &stmt) override;
 

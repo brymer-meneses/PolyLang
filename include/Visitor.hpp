@@ -11,6 +11,7 @@ struct BinaryExpr;
 struct CallExpr;
 
 struct BlockStmt;
+struct IfStmt;
 struct ReturnStmt;
 struct Stmt;
 struct FunctionStmt;
@@ -34,6 +35,7 @@ public:
   virtual T visit(const FunctionStmt &stmt) = 0;
   virtual T visit(const PrototypeStmt &stmt) = 0;
   virtual T visit(const BlockStmt &stmt) = 0;
+  virtual T visit(const IfStmt &stmt) = 0;
 
   virtual U visit(const ExpressionStmt &stmt) = 0;
   virtual U visit(const ReturnStmt &stmt) = 0;

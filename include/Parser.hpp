@@ -35,6 +35,7 @@ private:
   std::unique_ptr<Stmt> parseStatement();
   std::unique_ptr<Stmt> parseExpressionStmt();
   std::unique_ptr<Stmt> parseFunctionDefinition();
+  std::unique_ptr<Stmt> parseIfStmt();
 
   std::unique_ptr<BlockStmt> parseBlock();
   std::unique_ptr<ReturnStmt> parseReturn();
@@ -48,6 +49,7 @@ private:
     case TokenType::Greater:
     case TokenType::LesserEqual:
     case TokenType::GreaterEqual:
+    case TokenType::EqualEqual:
       return 10;
     case TokenType::Plus:
     case TokenType::Minus:
